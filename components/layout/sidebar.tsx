@@ -40,7 +40,7 @@ export function Sidebar() {
 
   return (
     <>
-      <aside className="hidden w-72 flex-col bg-gradient-to-b from-[var(--navy-950)] via-[var(--navy-900)] to-[var(--navy-800)] p-6 text-white lg:flex">
+      <aside className="hidden w-72 flex-col bg-gradient-to-b from-[var(--navy-950)] via-[var(--navy-900)] to-[var(--navy-800)] p-6 text-white md:flex">
         <div className="mb-8 rounded-2xl border border-white/10 bg-white/5 p-4">
           <p className="text-xs uppercase tracking-[0.2em] text-teal-300">Özel Ders</p>
           <p className="mt-2 text-lg font-semibold leading-tight">{APP_NAME}</p>
@@ -51,22 +51,29 @@ export function Sidebar() {
         </div>
       </aside>
 
-      <Button variant="outline" size="icon" className="fixed left-4 top-4 z-40 lg:hidden" onClick={() => setOpen(true)}>
+      <button
+        type="button"
+        aria-label="Menüyü aç"
+        className="fixed left-4 top-4 z-[60] flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white/90 text-slate-900 shadow backdrop-blur md:hidden"
+        onClick={() => setOpen(true)}
+      >
         <Menu className="h-5 w-5" />
-      </Button>
+      </button>
 
       {open && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <button className="absolute inset-0 bg-slate-950/60" onClick={() => setOpen(false)} />
-          <aside className="relative h-full w-72 bg-gradient-to-b from-[var(--navy-950)] via-[var(--navy-900)] to-[var(--navy-800)] p-6 text-white">
-            <div className="mb-8 flex items-center justify-between">
-              <p className="text-base font-semibold">{APP_NAME}</p>
+        <div className="fixed inset-0 z-[80] md:hidden">
+          <button className="absolute inset-0 z-[70] bg-slate-950/60" onClick={() => setOpen(false)} />
+          <aside className="relative z-[80] h-full w-[280px] bg-gradient-to-b from-[var(--navy-950)] via-[var(--navy-900)] to-[var(--navy-800)] p-0 text-white">
+            <div className="flex h-14 items-center justify-between border-b border-white/10 px-4">
+              <div className="text-sm font-semibold tracking-wide">Menü</div>
               <Button variant="ghost" size="icon" className="text-slate-200 hover:bg-white/10 hover:text-white" onClick={() => setOpen(false)}>
                 <X className="h-5 w-5" />
               </Button>
             </div>
-            <MenuList onNavigate={() => setOpen(false)} />
-            <div className="mt-6">
+            <div className="p-6">
+              <MenuList onNavigate={() => setOpen(false)} />
+            </div>
+            <div className="mt-2 p-6 pt-0">
               <LogoutButton className="w-full border-white/10 bg-transparent text-slate-100 hover:bg-white/10 hover:text-white" />
             </div>
           </aside>
