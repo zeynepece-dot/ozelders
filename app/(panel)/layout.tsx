@@ -7,7 +7,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
   return (
     <div className="flex min-h-screen">
       <Sidebar />
-      <main className="w-full p-4 md:p-6 lg:p-8">{children}</main>
+      <main className="w-full p-4 pt-14 md:p-6 md:pt-6 lg:p-8">{children}</main>
     </div>
   );
 }

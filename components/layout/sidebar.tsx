@@ -1,10 +1,11 @@
 ﻿"use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { LogOut, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { APP_NAME, SIDEBAR_ITEMS } from "@/lib/constants";
+import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { LogoutButton } from "@/components/shared/logout-button";
@@ -37,6 +38,15 @@ function MenuList({ onNavigate }: { onNavigate?: () => void }) {
 
 export function Sidebar() {
   const [open, setOpen] = useState(false);
+  const router = useRouter();
+
+  async function handleMobileSignOut() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    setOpen(false);
+    router.push("/giris");
+    router.refresh();
+  }
 
   return (
     <>
@@ -51,19 +61,27 @@ export function Sidebar() {
         </div>
       </aside>
 
-      <button
-        type="button"
-        aria-label="Menüyü aç"
-        className="fixed left-4 top-4 z-[60] flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white/90 text-slate-900 shadow backdrop-blur md:hidden"
-        onClick={() => setOpen(true)}
-      >
-        <Menu className="h-5 w-5" />
-      </button>
+      <header className="fixed left-0 right-0 top-0 z-[80] h-14 border-b border-white/10 bg-gradient-to-r from-[var(--navy-950)] via-[var(--navy-900)] to-[var(--navy-800)] text-white backdrop-blur md:hidden">
+        <div className="flex h-full items-center gap-3 px-3">
+          <button
+            type="button"
+            aria-label="Menüyü aç"
+            className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 hover:bg-white/15 active:bg-white/20"
+            onClick={() => setOpen(true)}
+          >
+            <Menu className="h-5 w-5 text-white" />
+          </button>
+          <div className="flex-1 text-center">
+            <div className="text-sm font-semibold tracking-wide">Özel Ders Takip Programı</div>
+          </div>
+          <div className="w-10" />
+        </div>
+      </header>
 
       {open && (
-        <div className="fixed inset-0 z-[80] md:hidden">
-          <button className="absolute inset-0 z-[70] bg-slate-950/60" onClick={() => setOpen(false)} />
-          <aside className="relative z-[80] h-full w-[280px] bg-gradient-to-b from-[var(--navy-950)] via-[var(--navy-900)] to-[var(--navy-800)] p-0 text-white">
+        <div className="fixed inset-0 z-[90] md:hidden">
+          <button className="absolute inset-0 z-[90] bg-slate-950/60" onClick={() => setOpen(false)} />
+          <aside className="relative z-[100] flex h-full w-[280px] flex-col bg-gradient-to-b from-[var(--navy-950)] via-[var(--navy-900)] to-[var(--navy-800)] p-0 text-white">
             <div className="flex h-14 items-center justify-between border-b border-white/10 px-4">
               <div className="text-sm font-semibold tracking-wide">Menü</div>
               <Button variant="ghost" size="icon" className="text-slate-200 hover:bg-white/10 hover:text-white" onClick={() => setOpen(false)}>
@@ -73,8 +91,15 @@ export function Sidebar() {
             <div className="p-6">
               <MenuList onNavigate={() => setOpen(false)} />
             </div>
-            <div className="mt-2 p-6 pt-0">
-              <LogoutButton className="w-full border-white/10 bg-transparent text-slate-100 hover:bg-white/10 hover:text-white" />
+            <div className="mt-auto border-t border-white/10 p-4">
+              <Button
+                variant="outline"
+                className="w-full justify-start border-white/20 text-white hover:bg-white/10 hover:text-white"
+                onClick={handleMobileSignOut}
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Çıkış
+              </Button>
             </div>
           </aside>
         </div>
