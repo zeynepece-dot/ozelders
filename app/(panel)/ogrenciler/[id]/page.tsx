@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 type Lesson = {
   id: string;
@@ -36,9 +37,24 @@ type StudentDetailResponse = {
   subject: string;
   hourly_rate_default: number | string;
   phone: string | null;
-  student_notes: Array<{ id: string; text: string }>;
-  homework: Array<{ id: string; title: string; status: "BEKLIYOR" | "TAMAMLANDI" }>;
   lessons: Lesson[];
+};
+
+type StudentNote = {
+  id: string;
+  text: string;
+  created_at: string;
+  updated_at: string;
+};
+
+type HomeworkItem = {
+  id: string;
+  title: string;
+  description: string | null;
+  due_date: string | null;
+  status: "BEKLIYOR" | "TAMAMLANDI";
+  created_at: string;
+  updated_at: string;
 };
 
 type StudentRecurrence = {
@@ -97,6 +113,17 @@ export default function OgrenciDetayPage() {
   const { data: recurrences = [], mutate: mutateRecurrences } = useSWR<
     StudentRecurrence[]
   >(studentId ? `/api/students/${studentId}/recurrences` : null, fetcher);
+  const [homeworkFilter, setHomeworkFilter] = useState<
+    "BEKLIYOR" | "TAMAMLANDI" | "ALL"
+  >("BEKLIYOR");
+  const { data: studentNotes = [], mutate: mutateStudentNotes } = useSWR<StudentNote[]>(
+    studentId ? `/api/students/${studentId}/notes` : null,
+    fetcher,
+  );
+  const { data: homeworkItems = [], mutate: mutateHomework } = useSWR<HomeworkItem[]>(
+    studentId ? `/api/students/${studentId}/homework?status=${homeworkFilter}` : null,
+    fetcher,
+  );
 
   const [lessonDialogOpen, setLessonDialogOpen] = useState(false);
   const [recurrenceDialogOpen, setRecurrenceDialogOpen] = useState(false);
@@ -108,6 +135,20 @@ export default function OgrenciDetayPage() {
   const [stopMode, setStopMode] = useState<"NEXT" | "DATE">("NEXT");
   const [stopDate, setStopDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [stopping, setStopping] = useState(false);
+  const [noteDialogOpen, setNoteDialogOpen] = useState(false);
+  const [noteEditId, setNoteEditId] = useState<string | null>(null);
+  const [noteText, setNoteText] = useState("");
+  const [noteSaving, setNoteSaving] = useState(false);
+  const [quickNote, setQuickNote] = useState("");
+  const [quickNoteSaving, setQuickNoteSaving] = useState(false);
+  const [homeworkDialogOpen, setHomeworkDialogOpen] = useState(false);
+  const [homeworkEditId, setHomeworkEditId] = useState<string | null>(null);
+  const [homeworkTitle, setHomeworkTitle] = useState("");
+  const [homeworkDescription, setHomeworkDescription] = useState("");
+  const [homeworkDueDate, setHomeworkDueDate] = useState("");
+  const [homeworkSaving, setHomeworkSaving] = useState(false);
+  const [quickHomeworkTitle, setQuickHomeworkTitle] = useState("");
+  const [isCreatingHomework, setIsCreatingHomework] = useState(false);
 
   const [singleDate, setSingleDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [singleTime, setSingleTime] = useState("18:00");
@@ -186,6 +227,211 @@ export default function OgrenciDetayPage() {
     setWeeklyNoShowRule(computedNoShowRule);
     setWeeklyNote("");
     setRecurrenceDialogOpen(true);
+  }
+
+  function openNoteDialog(note?: StudentNote) {
+    if (note) {
+      setNoteEditId(note.id);
+      setNoteText(note.text);
+    } else {
+      setNoteEditId(null);
+      setNoteText("");
+    }
+    setNoteDialogOpen(true);
+  }
+
+  async function saveNote() {
+    if (!studentId) return;
+    if (!noteText.trim()) {
+      toast.error("Not metni zorunludur.");
+      return;
+    }
+
+    setNoteSaving(true);
+    const endpoint = noteEditId ? `/api/notes/${noteEditId}` : `/api/students/${studentId}/notes`;
+    const method = noteEditId ? "PATCH" : "POST";
+    const response = await fetch(endpoint, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: noteText.trim() }),
+    });
+    setNoteSaving(false);
+
+    if (!response.ok) {
+      const payload = await response.json().catch(() => null);
+      toast.error(payload?.error ?? "Not kaydedilemedi.");
+      return;
+    }
+
+    await mutateStudentNotes();
+    setNoteDialogOpen(false);
+    setNoteEditId(null);
+    setNoteText("");
+    toast.success(noteEditId ? "Not güncellendi." : "Not eklendi.");
+  }
+
+  async function deleteNote(noteId: string) {
+    const confirmed = window.confirm("Bu notu silmek istediğinize emin misiniz?");
+    if (!confirmed) return;
+
+    const response = await fetch(`/api/notes/${noteId}`, { method: "DELETE" });
+    if (!response.ok) {
+      const payload = await response.json().catch(() => null);
+      toast.error(payload?.error ?? "Not silinemedi.");
+      return;
+    }
+
+    await mutateStudentNotes();
+    toast.success("Not silindi.");
+  }
+
+  async function addQuickNote() {
+    if (!studentId) return;
+    const text = quickNote.trim();
+    if (!text) {
+      toast.warning("Lütfen bir not yazın.");
+      return;
+    }
+    if (text.length < 2) {
+      toast.warning("Not en az 2 karakter olmalı.");
+      return;
+    }
+
+    setQuickNoteSaving(true);
+    const response = await fetch(`/api/students/${studentId}/notes`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text }),
+    });
+    setQuickNoteSaving(false);
+
+    if (!response.ok) {
+      const payload = await response.json().catch(() => null);
+      toast.error(payload?.error ?? "Not eklenemedi.");
+      return;
+    }
+
+    setQuickNote("");
+    await mutateStudentNotes();
+    toast.success("Not eklendi.");
+  }
+
+  function openHomeworkDialog(item?: HomeworkItem) {
+    if (item) {
+      setHomeworkEditId(item.id);
+      setHomeworkTitle(item.title);
+      setHomeworkDescription(item.description ?? "");
+      setHomeworkDueDate(item.due_date ?? "");
+    } else {
+      setHomeworkEditId(null);
+      setHomeworkTitle("");
+      setHomeworkDescription("");
+      setHomeworkDueDate("");
+    }
+    setHomeworkDialogOpen(true);
+  }
+
+  async function saveHomework() {
+    if (!studentId) return;
+    if (!homeworkTitle.trim()) {
+      toast.error("Ödev başlığı zorunludur.");
+      return;
+    }
+
+    setHomeworkSaving(true);
+    const endpoint = homeworkEditId
+      ? `/api/homework/${homeworkEditId}`
+      : `/api/students/${studentId}/homework`;
+    const method = homeworkEditId ? "PATCH" : "POST";
+
+    const response = await fetch(endpoint, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: homeworkTitle.trim(),
+        description: homeworkDescription.trim() || "",
+        due_date: homeworkDueDate || "",
+      }),
+    });
+    setHomeworkSaving(false);
+
+    if (!response.ok) {
+      const payload = await response.json().catch(() => null);
+      toast.error(payload?.error ?? "Ödev kaydedilemedi.");
+      return;
+    }
+
+    await mutateHomework();
+    setHomeworkDialogOpen(false);
+    setHomeworkEditId(null);
+    setHomeworkTitle("");
+    setHomeworkDescription("");
+    setHomeworkDueDate("");
+    toast.success(homeworkEditId ? "Ödev güncellendi." : "Ödev eklendi.");
+  }
+
+  async function deleteHomework(homeworkId: string) {
+    const confirmed = window.confirm("Bu ödevi silmek istediğinize emin misiniz?");
+    if (!confirmed) return;
+
+    const response = await fetch(`/api/homework/${homeworkId}`, { method: "DELETE" });
+    if (!response.ok) {
+      const payload = await response.json().catch(() => null);
+      toast.error(payload?.error ?? "Ödev silinemedi.");
+      return;
+    }
+
+    await mutateHomework();
+    toast.success("Ödev silindi.");
+  }
+
+  async function toggleHomeworkStatus(item: HomeworkItem) {
+    const nextStatus = item.status === "TAMAMLANDI" ? "BEKLIYOR" : "TAMAMLANDI";
+    const response = await fetch(`/api/homework/${item.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: nextStatus }),
+    });
+
+    if (!response.ok) {
+      const payload = await response.json().catch(() => null);
+      toast.error(payload?.error ?? "Ödev durumu güncellenemedi.");
+      return;
+    }
+
+    await mutateHomework();
+    toast.success(
+      nextStatus === "TAMAMLANDI"
+        ? "Ödev tamamlandı."
+        : "Ödev tekrar beklemeye alındı.",
+    );
+  }
+
+  async function addQuickHomework() {
+    if (!studentId) return;
+    const title = quickHomeworkTitle.trim();
+    if (!title) {
+      toast.warning("Lütfen ödev başlığı yazın.");
+      return;
+    }
+
+    setIsCreatingHomework(true);
+    const response = await fetch(`/api/students/${studentId}/homework`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title }),
+    });
+    setIsCreatingHomework(false);
+
+    if (!response.ok) {
+      const payload = await response.json().catch(() => null);
+      toast.error(payload?.error ?? "Ödev eklenemedi.");
+      return;
+    }
+
+    setQuickHomeworkTitle("");
+    await mutateHomework();
+    toast.success("Ödev eklendi.");
   }
 
   async function createSingleLesson() {
@@ -336,28 +582,176 @@ export default function OgrenciDetayPage() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Notlar</CardTitle>
+            <div className="flex items-center justify-between gap-2">
+              <CardTitle>Notlar</CardTitle>
+              <Button size="sm" variant="outline" onClick={() => openNoteDialog()}>
+                + Not Ekle
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
-            {(student.student_notes ?? []).length === 0 ? (
-              <p className="text-slate-500">Not bulunmuyor.</p>
+            <div className="space-y-2">
+              <Label>Hızlı Not</Label>
+              <Textarea
+                className="min-h-[80px]"
+                value={quickNote}
+                onChange={(e) => setQuickNote(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    void addQuickNote();
+                  }
+                }}
+                placeholder="Derse dair kısa not yaz…"
+              />
+              <div className="flex justify-end">
+                <Button size="sm" onClick={addQuickNote} disabled={quickNoteSaving}>
+                  {quickNoteSaving ? "Ekleniyor..." : "Ekle"}
+                </Button>
+              </div>
+            </div>
+            <div className="border-t border-slate-200" />
+
+            {studentNotes.length === 0 ? (
+              <div className="space-y-1">
+                <p className="text-slate-500">Not bulunmuyor.</p>
+                <p className="text-xs text-slate-400">Not ekleyin.</p>
+              </div>
             ) : (
-              (student.student_notes ?? []).map((note) => <p key={note.id}>- {note.text}</p>)
+              studentNotes.map((note) => (
+                <div key={note.id} className="rounded-xl border border-slate-200 p-3">
+                  <p className="whitespace-pre-wrap text-slate-700">{note.text}</p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {formatDateTimeTR(note.created_at)}
+                  </p>
+                  <div className="mt-2 flex items-center gap-2">
+                    <Button size="sm" variant="outline" onClick={() => openNoteDialog(note)}>
+                      Düzenle
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-rose-600 hover:text-rose-700"
+                      onClick={() => deleteNote(note.id)}
+                    >
+                      Sil
+                    </Button>
+                  </div>
+                </div>
+              ))
             )}
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Ödevler</CardTitle>
+            <div className="space-y-2">
+              <div className="space-y-2">
+                <Label>Hızlı Ödev</Label>
+                <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
+                  <Input
+                    value={quickHomeworkTitle}
+                    onChange={(e) => setQuickHomeworkTitle(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        void addQuickHomework();
+                      }
+                    }}
+                    placeholder="Örn: 20 soru çöz, paragraf testi, konu tekrarı…"
+                  />
+                  <Button
+                    type="button"
+                    onClick={addQuickHomework}
+                    disabled={isCreatingHomework}
+                  >
+                    {isCreatingHomework ? "Ekleniyor..." : "Ekle"}
+                  </Button>
+                </div>
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <CardTitle>Ödevler</CardTitle>
+                <Button size="sm" variant="outline" onClick={() => openHomeworkDialog()}>
+                  + Ödev Ekle
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={homeworkFilter === "BEKLIYOR" ? "default" : "outline"}
+                  onClick={() => setHomeworkFilter("BEKLIYOR")}
+                >
+                  Bekleyenler
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={homeworkFilter === "ALL" ? "default" : "outline"}
+                  onClick={() => setHomeworkFilter("ALL")}
+                >
+                  Tümü
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={homeworkFilter === "TAMAMLANDI" ? "default" : "outline"}
+                  onClick={() => setHomeworkFilter("TAMAMLANDI")}
+                >
+                  Tamamlananlar
+                </Button>
+              </div>
+            </div>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
-            {(student.homework ?? []).length === 0 ? (
+            {homeworkItems.length === 0 ? (
               <p className="text-slate-500">Ödev bulunmuyor.</p>
             ) : (
-              (student.homework ?? []).map((homework) => (
-                <p key={homework.id}>
-                  - {homework.title} ({homework.status === "BEKLIYOR" ? "Bekliyor" : "Tamamlandı"})
-                </p>
+              homeworkItems.map((item) => (
+                <div key={item.id} className="rounded-xl border border-slate-200 p-3">
+                  <div className="mb-1 flex items-center justify-between gap-2">
+                    <p className="font-medium text-slate-800">{item.title}</p>
+                    <span
+                      className={`rounded-full px-2 py-1 text-xs font-medium ${
+                        item.status === "TAMAMLANDI"
+                          ? "bg-emerald-100 text-emerald-700"
+                          : "bg-amber-100 text-amber-700"
+                      }`}
+                    >
+                      {item.status === "TAMAMLANDI" ? "Tamamlandı" : "Bekliyor"}
+                    </span>
+                  </div>
+                  {item.description ? (
+                    <p className="mb-2 whitespace-pre-wrap text-xs text-slate-600">
+                      {item.description}
+                    </p>
+                  ) : null}
+                  {item.due_date ? (
+                    <span className="inline-flex rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-600">
+                      Son: {format(new Date(`${item.due_date}T00:00:00`), "dd.MM.yyyy")}
+                    </span>
+                  ) : null}
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <label className="inline-flex items-center gap-2 rounded-lg border px-2 py-1 text-xs">
+                      <input
+                        type="checkbox"
+                        checked={item.status === "TAMAMLANDI"}
+                        onChange={() => toggleHomeworkStatus(item)}
+                      />
+                      <span>Tamamlandı</span>
+                    </label>
+                    <Button size="sm" variant="outline" onClick={() => openHomeworkDialog(item)}>
+                      Düzenle
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-rose-600 hover:text-rose-700"
+                      onClick={() => deleteHomework(item.id)}
+                    >
+                      Sil
+                    </Button>
+                  </div>
+                </div>
               ))
             )}
           </CardContent>
@@ -457,6 +851,74 @@ export default function OgrenciDetayPage() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={noteDialogOpen} onOpenChange={setNoteDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{noteEditId ? "Notu Düzenle" : "Not Ekle"}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label>Not</Label>
+            <Textarea
+              rows={5}
+              value={noteText}
+              onChange={(e) => setNoteText(e.target.value)}
+              placeholder="Not metnini yazın..."
+            />
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setNoteDialogOpen(false)}>
+              İptal
+            </Button>
+            <Button onClick={saveNote} disabled={noteSaving}>
+              {noteSaving ? "Kaydediliyor..." : "Kaydet"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={homeworkDialogOpen} onOpenChange={setHomeworkDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{homeworkEditId ? "Ödevi Düzenle" : "Ödev Ekle"}</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-3">
+            <div className="space-y-1">
+              <Label>Başlık</Label>
+              <Input
+                value={homeworkTitle}
+                onChange={(e) => setHomeworkTitle(e.target.value)}
+                placeholder="Ödev başlığı"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>Açıklama (opsiyonel)</Label>
+              <Textarea
+                rows={4}
+                value={homeworkDescription}
+                onChange={(e) => setHomeworkDescription(e.target.value)}
+                placeholder="Açıklama"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>Son tarih (opsiyonel)</Label>
+              <Input
+                type="date"
+                value={homeworkDueDate}
+                onChange={(e) => setHomeworkDueDate(e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setHomeworkDialogOpen(false)}>
+              İptal
+            </Button>
+            <Button onClick={saveHomework} disabled={homeworkSaving}>
+              {homeworkSaving ? "Kaydediliyor..." : "Kaydet"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={lessonDialogOpen} onOpenChange={setLessonDialogOpen}>
         <DialogContent className="max-w-lg">

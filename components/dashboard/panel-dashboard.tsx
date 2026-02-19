@@ -9,7 +9,6 @@ import {
   format,
   isWithinInterval,
   parseISO,
-  startOfDay,
   startOfMonth,
   startOfWeek,
 } from "date-fns";
@@ -27,6 +26,7 @@ type KpiCard = {
 };
 
 type DaySchedule = {
+  key: string;
   day: Date;
   lessons: LessonApiResponse[];
 };
@@ -118,25 +118,35 @@ export function PanelDashboard() {
     };
   }, [activeLessons, monthEnd, monthStart, weekEnd, weekStart]);
 
-  const weeklySchedule = useMemo<DaySchedule[]>(() => {
-    const days = Array.from({ length: 7 }, (_, index) => startOfDay(addDays(weekStart, index)));
+  const weekLessons = useMemo(() => {
+    return activeLessons.filter((lesson) => {
+      const startDate = toDate(lesson.start_datetime);
+      if (!startDate) return false;
+      return isWithinInterval(startDate, { start: weekStart, end: weekEnd });
+    });
+  }, [activeLessons, weekEnd, weekStart]);
 
-    return days.map((day) => {
-      const dayLessons = activeLessons
-        .filter((lesson) => {
-          const startDate = toDate(lesson.start_datetime);
-          if (!startDate) return false;
-          return startOfDay(startDate).getTime() === day.getTime();
-        })
-        .sort((a, b) => {
+  const weeklySchedule = useMemo<DaySchedule[]>(() => {
+    const groups = weekLessons.reduce<Record<string, LessonApiResponse[]>>((acc, lesson) => {
+      const startDate = toDate(lesson.start_datetime);
+      if (!startDate) return acc;
+      const key = format(startDate, "yyyy-MM-dd");
+      (acc[key] ||= []).push(lesson);
+      return acc;
+    }, {});
+
+    return Object.entries(groups)
+      .map(([key, items]) => ({
+        key,
+        day: new Date(`${key}T00:00:00`),
+        lessons: [...items].sort((a, b) => {
           const aTime = toDate(a.start_datetime)?.getTime() ?? 0;
           const bTime = toDate(b.start_datetime)?.getTime() ?? 0;
           return aTime - bTime;
-        });
-
-      return { day, lessons: dayLessons };
-    });
-  }, [activeLessons, weekStart]);
+        }),
+      }))
+      .sort((a, b) => a.day.getTime() - b.day.getTime());
+  }, [weekLessons]);
 
   const kpiCards: KpiCard[] = [
     {
@@ -210,40 +220,51 @@ export function PanelDashboard() {
         </div>
 
         <div className="space-y-3">
-          {weeklySchedule.map(({ day, lessons: dayLessons }) => (
-            <Card key={day.toISOString()} className="overflow-hidden border-slate-200 bg-white shadow-sm">
+          {weeklySchedule.length === 0 ? (
+            <Card className="border-slate-200 bg-white shadow-sm">
+              <CardContent className="p-4">
+                <p className="text-sm text-slate-600">Bu hafta planlanmış ders yok.</p>
+                <Button
+                  asChild
+                  variant="ghost"
+                  className="mt-2 h-auto w-full justify-start px-0 text-sm font-medium text-teal-700 hover:bg-transparent hover:text-teal-800"
+                >
+                  <Link href={`/takvim?date=${format(weekStart, "yyyy-MM-dd")}`}>+ Ek Ders Ekle</Link>
+                </Button>
+              </CardContent>
+            </Card>
+          ) : null}
+
+          {weeklySchedule.map(({ key, day, lessons: dayLessons }) => (
+            <Card key={key} className="overflow-hidden border-slate-200 bg-white shadow-sm">
               <div className="bg-slate-800 px-4 py-3 text-white">
                 <p className="text-xs text-slate-200">{format(day, "d MMMM", { locale: tr })}</p>
                 <p className="text-lg font-semibold capitalize">{format(day, "EEEE", { locale: tr })}</p>
               </div>
               <CardContent className="space-y-3 p-4">
-                {dayLessons.length === 0 ? (
-                  <p className="text-sm text-slate-500">Bugün hiç özel dersiniz yok.</p>
-                ) : (
-                  <div className="space-y-2">
-                    {dayLessons.map((lesson) => (
-                      <div key={lesson.id} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                        <div className="mb-2 flex items-center justify-between gap-2">
-                          <p className="text-sm font-semibold text-slate-900">
-                            {format(toDate(lesson.start_datetime) ?? new Date(), "HH:mm", { locale: tr })} - {lesson.students.full_name}
-                          </p>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          <span
-                            className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${statusBadgeClass(lesson.status)}`}
-                          >
-                            {statusLabel(lesson.status)}
-                          </span>
-                          <span
-                            className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${paymentBadgeClass(lesson.payment_status)}`}
-                          >
-                            {paymentLabel(lesson.payment_status)}
-                          </span>
-                        </div>
+                <div className="space-y-2">
+                  {dayLessons.map((lesson) => (
+                    <div key={lesson.id} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                      <div className="mb-2 flex items-center justify-between gap-2">
+                        <p className="text-sm font-semibold text-slate-900">
+                          {format(toDate(lesson.start_datetime) ?? new Date(), "HH:mm", { locale: tr })} - {lesson.students.full_name}
+                        </p>
                       </div>
-                    ))}
-                  </div>
-                )}
+                      <div className="flex flex-wrap gap-2">
+                        <span
+                          className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${statusBadgeClass(lesson.status)}`}
+                        >
+                          {statusLabel(lesson.status)}
+                        </span>
+                        <span
+                          className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${paymentBadgeClass(lesson.payment_status)}`}
+                        >
+                          {paymentLabel(lesson.payment_status)}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
 
                 <Button asChild variant="ghost" className="h-auto w-full justify-start px-0 text-sm font-medium text-teal-700 hover:bg-transparent hover:text-teal-800">
                   <Link href={`/takvim?date=${format(day, "yyyy-MM-dd")}`}>+ Ek Ders Ekle</Link>

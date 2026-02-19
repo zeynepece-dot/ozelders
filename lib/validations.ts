@@ -113,6 +113,35 @@ export const calendarNoteSchema = z.object({
   endDateTime: isoDateString,
   note: z.string().optional().or(z.literal("")),
 });
+
+export const studentNoteCreateSchema = z.object({
+  text: z.string().trim().min(2, "Not metni en az 2 karakter olmalıdır."),
+});
+
+export const studentNoteUpdateSchema = z.object({
+  text: z.string().trim().min(2, "Not metni en az 2 karakter olmalıdır."),
+});
+
+export const homeworkCreateSchema = z.object({
+  title: z.string().trim().min(2, "Ödev başlığı en az 2 karakter olmalıdır."),
+  description: z.string().trim().optional().or(z.literal("")),
+  due_date: z.string().regex(isoDateOnlyRegex, "Son tarih geçersiz.").optional().or(z.literal("")),
+});
+
+export const homeworkUpdateSchema = z
+  .object({
+    title: z.string().trim().min(2, "Ödev başlığı en az 2 karakter olmalıdır.").optional(),
+    description: z.string().trim().optional().or(z.literal("")),
+    due_date: z.string().regex(isoDateOnlyRegex, "Son tarih geçersiz.").optional().or(z.literal("")),
+    status: z.enum(["BEKLIYOR", "TAMAMLANDI"]).optional(),
+  })
+  .refine((value) => Object.keys(value).length > 0, {
+    message: "Güncellenecek alan bulunamadı.",
+  });
+
+export const homeworkStatusFilterSchema = z.object({
+  status: z.enum(["BEKLIYOR", "TAMAMLANDI", "ALL"]).optional(),
+});
 export const demoSeedSchema = z.object({
   overwrite: z.boolean().optional().default(false),
 });
