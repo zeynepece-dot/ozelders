@@ -121,6 +121,7 @@ export function CalendarBoard() {
   const [editor, setEditor] = useState<EditorState>(DEFAULT_STATE);
   const [open, setOpen] = useState(false);
   const [showCancelled, setShowCancelled] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const [studentPickerOpen, setStudentPickerOpen] = useState(false);
   const [scopeDialogOpen, setScopeDialogOpen] = useState(false);
   const [scopeDraft, setScopeDraft] = useState<RecurrenceScope>("THIS");
@@ -165,6 +166,20 @@ export function CalendarBoard() {
       setScopeDraft("THIS");
     }
   }, [recurringDatetimeChanged, scopeDraft]);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 768px)");
+    const updateMobile = (event: MediaQueryList | MediaQueryListEvent) => {
+      setIsMobile(event.matches);
+    };
+
+    updateMobile(mediaQuery);
+    mediaQuery.addEventListener("change", updateMobile);
+
+    return () => {
+      mediaQuery.removeEventListener("change", updateMobile);
+    };
+  }, []);
 
   function buildDefaultEditor(startDate: Date): EditorState {
     return {
@@ -415,11 +430,24 @@ export function CalendarBoard() {
         <FullCalendar
           plugins={[timeGridPlugin, dayGridPlugin, interactionPlugin]}
           initialView="timeGridDay"
-          headerToolbar={{
-            left: "prev,next today",
-            center: "title",
-            right: "timeGridDay,timeGridWeek,dayGridMonth",
-          }}
+          headerToolbar={
+            isMobile
+              ? {
+                  left: "prev,next",
+                  center: "title",
+                  right: "timeGridDay,timeGridWeek,dayGridMonth",
+                }
+              : {
+                  left: "prev,next today",
+                  center: "title",
+                  right: "timeGridDay,timeGridWeek,dayGridMonth",
+                }
+          }
+          titleFormat={
+            isMobile
+              ? { year: "numeric", month: "short", day: "numeric" }
+              : undefined
+          }
           buttonText={{
             today: "Bugün",
             day: "Gün",

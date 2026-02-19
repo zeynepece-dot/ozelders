@@ -169,3 +169,19 @@ body {
   background: #fca5a5;
   opacity: 0.22;
 }
+
+@media (max-width: 768px) {
+  .fc .fc-toolbar {
+    gap: 8px;
+  }
+
+  .fc .fc-button {
+    padding: 6px 10px;
+    font-size: 12px;
+    border-radius: 12px;
+  }
+
+  .fc .fc-toolbar-title {
+    font-size: 18px;
+  }
+}
