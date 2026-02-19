@@ -14,7 +14,7 @@ export default function OgrencilerPage() {
       <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
         <div>
           <PageHeader title="Öğrenciler" subtitle="Öğrenci listesi ve borç durumu" />
-          <div className="-mt-3 flex items-start gap-2 text-sm text-slate-500">
+          <div className="-mt-3 flex items-start gap-2 pl-[72px] text-sm text-slate-500 md:pl-0">
             <Info className="mt-0.5 h-4 w-4 text-slate-400" />
             <p>Ders planlamak için öğrenciyi seçin.</p>
           </div>
