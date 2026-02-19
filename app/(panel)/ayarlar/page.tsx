@@ -13,9 +13,8 @@ import { formatDateTR } from "@/lib/format";
 import { useSettings } from "@/hooks/useSettings";
 import { useProfile } from "@/hooks/useProfile";
 
-const profilePasswordSchema = z
+const passwordChangeSchema = z
   .object({
-    full_name: z.string().trim().min(2, "Ad Soyad en az 2 karakter olmalıdır."),
     currentPassword: z.string(),
     newPassword: z.string(),
     newPasswordRepeat: z.string(),
@@ -64,7 +63,7 @@ async function parseError(response: Response, fallback: string) {
 
 export default function AyarlarPage() {
   const { data: settings, mutate } = useSettings();
-  const { data: profile, mutate: mutateProfile } = useProfile();
+  const { data: profile } = useProfile();
 
   const [adminEmail, setAdminEmail] = useState("");
   const [overdueDays, setOverdueDays] = useState(7);
@@ -80,13 +79,11 @@ export default function AyarlarPage() {
   >("UCRET_ALINMAZ");
   const [saving, setSaving] = useState(false);
 
-  const [fullName, setFullName] = useState("");
   const [profileEmail, setProfileEmail] = useState("");
-  const [username, setUsername] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [newPasswordRepeat, setNewPasswordRepeat] = useState("");
-  const [profileSaving, setProfileSaving] = useState(false);
+  const [passwordSaving, setPasswordSaving] = useState(false);
 
   useEffect(() => {
     if (!settings) return;
@@ -108,8 +105,6 @@ export default function AyarlarPage() {
   useEffect(() => {
     if (!profile) return;
     setProfileEmail(profile.email ?? "");
-    setFullName(profile.full_name ?? "");
-    setUsername(profile.username ?? "");
   }, [profile]);
 
   const holidayItems = useMemo(
@@ -117,54 +112,29 @@ export default function AyarlarPage() {
     [holidays],
   );
 
-  const usernameDisplay = useMemo(() => {
-    if (username) return username;
-    if (!profileEmail) return "";
-    return profileEmail.split("@")[0] ?? "";
-  }, [profileEmail, username]);
-
-  const saveProfileAndPassword = async () => {
-    const parsed = profilePasswordSchema.safeParse({
-      full_name: fullName,
+  const savePassword = async () => {
+    const parsed = passwordChangeSchema.safeParse({
       currentPassword,
       newPassword,
       newPasswordRepeat,
     });
 
     if (!parsed.success) {
-      toast.error(parsed.error.issues[0]?.message ?? "Profil güncellenemedi.");
+      toast.error(parsed.error.issues[0]?.message ?? "Şifre güncellenemedi, tekrar deneyin.");
       return;
     }
-
-    setProfileSaving(true);
-
-    const profileResponse = await fetch("/api/profile", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        full_name: parsed.data.full_name,
-      }),
-    });
-
-    if (!profileResponse.ok) {
-      setProfileSaving(false);
-      toast.error(await parseError(profileResponse, "Profil güncellenemedi."));
-      return;
-    }
-
-    await mutateProfile();
-    toast.success("Profil güncellendi.");
 
     const wantsPasswordChange = Boolean(
       parsed.data.currentPassword ||
         parsed.data.newPassword ||
         parsed.data.newPasswordRepeat,
     );
-
     if (!wantsPasswordChange) {
-      setProfileSaving(false);
+      toast.warning("Şifreyi değiştirmek için alanları doldurun.");
       return;
     }
+
+    setPasswordSaving(true);
 
     const passwordResponse = await fetch("/api/auth/change-password", {
       method: "POST",
@@ -175,7 +145,7 @@ export default function AyarlarPage() {
       }),
     });
 
-    setProfileSaving(false);
+    setPasswordSaving(false);
 
     if (!passwordResponse.ok) {
       toast.error(
@@ -244,23 +214,10 @@ export default function AyarlarPage() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 text-sm text-slate-600">
-          <div className="grid gap-3 md:grid-cols-2">
-            <div className="space-y-1">
-              <Label>Kullanıcı Adı</Label>
-              <Input value={usernameDisplay} disabled readOnly />
-              <p className="text-xs text-slate-500">Kullanıcı adı değiştirilemez</p>
-            </div>
+          <div className="grid gap-3">
             <div className="space-y-1">
               <Label>E-posta</Label>
               <Input value={profileEmail} disabled readOnly />
-            </div>
-            <div className="space-y-1 md:col-span-2">
-              <Label>Ad Soyad</Label>
-              <Input
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="Ad Soyad"
-              />
             </div>
           </div>
         </CardContent>
@@ -303,8 +260,8 @@ export default function AyarlarPage() {
               />
             </div>
           </div>
-          <Button onClick={saveProfileAndPassword} disabled={profileSaving}>
-            {profileSaving ? "Kaydediliyor..." : "Değişiklikleri Kaydet"}
+          <Button onClick={savePassword} disabled={passwordSaving}>
+            {passwordSaving ? "Kaydediliyor..." : "Şifreyi Güncelle"}
           </Button>
         </CardContent>
       </Card>

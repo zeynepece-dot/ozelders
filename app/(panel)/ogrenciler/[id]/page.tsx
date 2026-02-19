@@ -59,19 +59,19 @@ const DURATION_OPTIONS = [1, 1.5, 2];
 
 const WEEKDAY_OPTIONS = [
   { value: 1, label: "Pazartesi" },
-  { value: 2, label: "SalÄ±" },
-  { value: 3, label: "Ã‡arÅŸamba" },
-  { value: 4, label: "PerÅŸembe" },
+  { value: 2, label: "Salı" },
+  { value: 3, label: "Çarşamba" },
+  { value: 4, label: "Perşembe" },
   { value: 5, label: "Cuma" },
   { value: 6, label: "Cumartesi" },
   { value: 0, label: "Pazar" },
 ];
 
 function statusLabel(status: Lesson["status"]) {
-  if (status === "PLANLANDI") return "PlanlandÄ±";
-  if (status === "YAPILDI") return "YapÄ±ldÄ±";
+  if (status === "PLANLANDI") return "Planlandı";
+  if (status === "YAPILDI") return "Yapıldı";
   if (status === "GELMEDI") return "Gelmedi";
-  return "Ä°ptal";
+  return "İptal";
 }
 
 function weekdayLabel(day: number) {
@@ -190,7 +190,7 @@ export default function OgrenciDetayPage() {
 
   async function createSingleLesson() {
     if (!studentId || !singleDate || !singleTime) {
-      toast.error("LÃ¼tfen tarih ve saat alanlarÄ±nÄ± doldurun.");
+      toast.error("Lütfen tarih ve saat alanlarını doldurun.");
       return;
     }
 
@@ -228,7 +228,7 @@ export default function OgrenciDetayPage() {
 
   async function createWeeklySeries() {
     if (!studentId || !weeklyTime || !weeklyStartDate) {
-      toast.error("LÃ¼tfen zorunlu alanlarÄ± doldurun.");
+      toast.error("Lütfen zorunlu alanları doldurun.");
       return;
     }
 
@@ -254,14 +254,14 @@ export default function OgrenciDetayPage() {
     const payload = await response.json().catch(() => null);
 
     if (!response.ok) {
-      toast.error(payload?.error ?? "HaftalÄ±k seri oluÅŸturulamadÄ±.");
+      toast.error(payload?.error ?? "Haftalık seri oluşturulamadı.");
       return;
     }
 
     setRecurrenceDialogOpen(false);
     await mutate();
     await mutateRecurrences();
-    toast.success(`HaftalÄ±k seri oluÅŸturuldu. ${payload.created_count} ders eklendi.`);
+    toast.success(`Haftalık seri oluşturuldu. ${payload.created_count} ders eklendi.`);
   }
 
   function openStopDialog(recurrenceId: string) {
@@ -287,7 +287,7 @@ export default function OgrenciDetayPage() {
 
     const payload = await response.json().catch(() => null);
     if (!response.ok) {
-      toast.error(payload?.error ?? "Seri durdurulamadÄ±.");
+      toast.error(payload?.error ?? "Seri durdurulamadı.");
       return;
     }
 
@@ -297,11 +297,11 @@ export default function OgrenciDetayPage() {
   }
 
   if (error) {
-    return <section className="text-sm text-red-600">Ã–ÄŸrenci bilgisi alÄ±namadÄ±.</section>;
+    return <section className="text-sm text-red-600">Öğrenci bilgisi alınamadı.</section>;
   }
 
   if (!student) {
-    return <section className="text-sm text-slate-500">YÃ¼kleniyor...</section>;
+    return <section className="text-sm text-slate-500">Yükleniyor...</section>;
   }
 
   return (
@@ -310,12 +310,12 @@ export default function OgrenciDetayPage() {
         <div>
           <h1 className="text-3xl font-bold text-slate-900">{student.full_name}</h1>
           <p className="mt-1 text-sm text-slate-500">
-            Genel / Dersler / Notlar / Ã–devler
+            Genel / Dersler / Notlar / Ödevler
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button className="bg-teal-600 text-white hover:bg-teal-700" onClick={openWeeklyDialog}>
-            HaftalÄ±k Tekrarlayan Ders Saati OluÅŸtur
+            Haftalık Tekrarlayan Ders Saati Oluştur
           </Button>
           <Button variant="outline" onClick={openSingleDialog}>
             Tek Ders Randevu Ekle
@@ -330,7 +330,7 @@ export default function OgrenciDetayPage() {
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
             <p>Ders: {student.subject}</p>
-            <p>Saat Ãœcreti: {formatCurrencyTRY(Number(student.hourly_rate_default))}</p>
+            <p>Saat Ücreti: {formatCurrencyTRY(Number(student.hourly_rate_default))}</p>
             <p>Telefon: {student.phone ?? "-"}</p>
           </CardContent>
         </Card>
@@ -348,15 +348,15 @@ export default function OgrenciDetayPage() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Ã–devler</CardTitle>
+            <CardTitle>Ödevler</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
             {(student.homework ?? []).length === 0 ? (
-              <p className="text-slate-500">Ã–dev bulunmuyor.</p>
+              <p className="text-slate-500">Ödev bulunmuyor.</p>
             ) : (
               (student.homework ?? []).map((homework) => (
                 <p key={homework.id}>
-                  - {homework.title} ({homework.status === "BEKLIYOR" ? "Bekliyor" : "TamamlandÄ±"})
+                  - {homework.title} ({homework.status === "BEKLIYOR" ? "Bekliyor" : "Tamamlandı"})
                 </p>
               ))
             )}
@@ -374,13 +374,13 @@ export default function OgrenciDetayPage() {
             onValueChange={(value) => setLessonTab(value as "upcoming" | "history")}
           >
             <TabsList className="grid w-full max-w-xs grid-cols-2">
-              <TabsTrigger value="upcoming">YaklaÅŸan</TabsTrigger>
-              <TabsTrigger value="history">GeÃ§miÅŸ</TabsTrigger>
+              <TabsTrigger value="upcoming">Yaklaşan</TabsTrigger>
+              <TabsTrigger value="history">Geçmiş</TabsTrigger>
             </TabsList>
 
             <TabsContent value="upcoming" className="mt-3 space-y-2 text-sm">
               {upcomingLessons.length === 0 ? (
-                <p className="text-slate-500">YaklaÅŸan ders bulunmuyor.</p>
+                <p className="text-slate-500">Yaklaşan ders bulunmuyor.</p>
               ) : (
                 upcomingLessons.map((lesson) => (
                   <div key={lesson.id} className="flex justify-between border-b py-2">
@@ -394,7 +394,7 @@ export default function OgrenciDetayPage() {
 
             <TabsContent value="history" className="mt-3 space-y-2 text-sm">
               {historyLessons.length === 0 ? (
-                <p className="text-slate-500">GeÃ§miÅŸ ders bulunmuyor.</p>
+                <p className="text-slate-500">Geçmiş ders bulunmuyor.</p>
               ) : (
                 historyLessons.map((lesson) => (
                   <div key={lesson.id} className="flex justify-between border-b py-2">
@@ -415,7 +415,7 @@ export default function OgrenciDetayPage() {
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
           {recurrences.length === 0 ? (
-            <p className="text-slate-500">Bu Ã¶ÄŸrenci iÃ§in tekrarlayan seri yok.</p>
+            <p className="text-slate-500">Bu öğrenci için tekrarlayan seri yok.</p>
           ) : (
             recurrences.map((recurrence) => (
               <div
@@ -425,11 +425,11 @@ export default function OgrenciDetayPage() {
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="space-y-1">
                     <p className="font-semibold text-slate-900">
-                      {recurrence.interval_weeks === 2 ? "2 Haftada Bir" : "HaftalÄ±k"}
+                      {recurrence.interval_weeks === 2 ? "2 Haftada Bir" : "Haftalık"}
                     </p>
                     <p className="text-slate-600">
-                      GÃ¼n: {weekdayLabel(recurrence.weekdays[0] ?? 1)} â€¢ Saat:{" "}
-                      {format(new Date(recurrence.start_datetime), "HH:mm")} â€¢ SÃ¼re:{" "}
+                      Gün: {weekdayLabel(recurrence.weekdays[0] ?? 1)} • Saat:{" "}
+                      {format(new Date(recurrence.start_datetime), "HH:mm")} • Süre:{" "}
                       {Number(recurrence.duration_hours).toFixed(1)} saat
                     </p>
                     <p className="text-xs text-slate-500">
@@ -469,11 +469,11 @@ export default function OgrenciDetayPage() {
               <Input type="date" value={singleDate} onChange={(e) => setSingleDate(e.target.value)} />
             </div>
             <div className="space-y-1">
-              <Label>BaÅŸlangÄ±Ã§ saati</Label>
+              <Label>Başlangıç saati</Label>
               <Input type="time" value={singleTime} onChange={(e) => setSingleTime(e.target.value)} />
             </div>
             <div className="space-y-1">
-              <Label>SÃ¼re (saat)</Label>
+              <Label>Süre (saat)</Label>
               <select
                 className="h-10 w-full rounded-xl border border-input px-3 text-sm"
                 value={singleDuration}
@@ -493,14 +493,14 @@ export default function OgrenciDetayPage() {
                 value={singleStatus}
                 onChange={(e) => setSingleStatus(e.target.value as Lesson["status"])}
               >
-                <option value="PLANLANDI">PlanlandÄ±</option>
-                <option value="YAPILDI">YapÄ±ldÄ±</option>
+                <option value="PLANLANDI">Planlandı</option>
+                <option value="YAPILDI">Yapıldı</option>
                 <option value="GELMEDI">Gelmedi</option>
-                <option value="IPTAL">Ä°ptal</option>
+                <option value="IPTAL">İptal</option>
               </select>
             </div>
             <div className="space-y-1">
-              <Label>Ã–deme durumu</Label>
+              <Label>Ödeme durumu</Label>
               <select
                 className="h-10 w-full rounded-xl border border-input px-3 text-sm"
                 value={singlePayment}
@@ -508,13 +508,13 @@ export default function OgrenciDetayPage() {
                   setSinglePayment(e.target.value as "ODENDI" | "ODENMEDI" | "KISMI")
                 }
               >
-                <option value="ODENMEDI">Ã–denmedi</option>
-                <option value="ODENDI">Ã–dendi</option>
-                <option value="KISMI">KÄ±smi</option>
+                <option value="ODENMEDI">Ödenmedi</option>
+                <option value="ODENDI">Ödendi</option>
+                <option value="KISMI">Kısmi</option>
               </select>
             </div>
             <div className="space-y-1">
-              <Label>Saat Ã¼creti</Label>
+              <Label>Saat ücreti</Label>
               <Input
                 type="number"
                 step="0.01"
@@ -530,7 +530,7 @@ export default function OgrenciDetayPage() {
           </div>
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => setLessonDialogOpen(false)}>
-              Ä°ptal
+              İptal
             </Button>
             <Button onClick={createSingleLesson} disabled={savingSingle}>
               {savingSingle ? "Kaydediliyor..." : "Kaydet"}
@@ -542,13 +542,13 @@ export default function OgrenciDetayPage() {
         <DialogContent className="max-w-xl gap-0 p-0">
           <div className="flex h-[calc(100dvh-56px)] max-h-[calc(100dvh-56px)] flex-col">
             <DialogHeader className="border-b px-4 py-4 pr-12">
-              <DialogTitle>HaftalÄ±k Tekrarlayan Ders Saati OluÅŸtur</DialogTitle>
+              <DialogTitle>Haftalık Tekrarlayan Ders Saati Oluştur</DialogTitle>
             </DialogHeader>
 
             <div className="ios-scroll flex-1 overflow-y-auto px-4 py-4">
               <div className="grid gap-3 md:grid-cols-2">
                 <div className="space-y-1">
-                  <Label>GÃ¼n seÃ§imi</Label>
+                  <Label>Gün seçimi</Label>
                   <select
                     className="h-10 w-full rounded-xl border border-input px-3 text-sm"
                     value={weeklyWeekday}
@@ -570,7 +570,7 @@ export default function OgrenciDetayPage() {
                   <Input type="time" value={weeklyTime} onChange={(e) => setWeeklyTime(e.target.value)} />
                 </div>
                 <div className="space-y-1">
-                  <Label>SÃ¼re (saat)</Label>
+                  <Label>Süre (saat)</Label>
                   <select
                     className="h-10 w-full rounded-xl border border-input px-3 text-sm"
                     value={weeklyDuration}
@@ -584,7 +584,7 @@ export default function OgrenciDetayPage() {
                   </select>
                 </div>
                 <div className="space-y-1">
-                  <Label>BaÅŸlangÄ±Ã§ tarihi</Label>
+                  <Label>Başlangıç tarihi</Label>
                   <Input
                     type="date"
                     value={weeklyStartDate}
@@ -592,21 +592,21 @@ export default function OgrenciDetayPage() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label>BitiÅŸ tarihi (opsiyonel)</Label>
+                  <Label>Bitiş tarihi (opsiyonel)</Label>
                   <Input type="date" value={weeklyEndDate} onChange={(e) => setWeeklyEndDate(e.target.value)} />
                 </div>
                 <div className="space-y-1">
-                  <Label>Tekrar sayÄ±sÄ± (opsiyonel)</Label>
+                  <Label>Tekrar sayısı (opsiyonel)</Label>
                   <Input
                     type="number"
                     min={1}
-                    placeholder="Ã–rn: 12"
+                    placeholder="Örn: 12"
                     value={weeklyCount}
                     onChange={(e) => setWeeklyCount(e.target.value)}
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label>Saat Ã¼creti</Label>
+                  <Label>Saat ücreti</Label>
                   <Input
                     type="number"
                     step="0.01"
@@ -616,7 +616,7 @@ export default function OgrenciDetayPage() {
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label>No-show kuralÄ±</Label>
+                  <Label>No-show kuralı</Label>
                   <select
                     className="h-10 w-full rounded-xl border border-input px-3 text-sm"
                     value={weeklyNoShowRule}
@@ -626,9 +626,9 @@ export default function OgrenciDetayPage() {
                       )
                     }
                   >
-                    <option value="UCRET_ALINMAZ">Ãœcret AlÄ±nmaz</option>
-                    <option value="YARIM_UCRET">YarÄ±m Ãœcret</option>
-                    <option value="TAM_UCRET">Tam Ãœcret</option>
+                    <option value="UCRET_ALINMAZ">Ücret Alınmaz</option>
+                    <option value="YARIM_UCRET">Yarım Ücret</option>
+                    <option value="TAM_UCRET">Tam Ücret</option>
                   </select>
                 </div>
                 <div className="space-y-1 md:col-span-2">
@@ -640,10 +640,10 @@ export default function OgrenciDetayPage() {
 
             <div className="sticky bottom-0 flex justify-end gap-2 border-t bg-white/80 px-4 py-4 backdrop-blur">
               <Button variant="outline" onClick={() => setRecurrenceDialogOpen(false)}>
-                Ä°ptal
+                İptal
               </Button>
               <Button onClick={createWeeklySeries} disabled={savingSeries}>
-                {savingSeries ? "OluÅŸturuluyor..." : "Kaydet"}
+                {savingSeries ? "Oluşturuluyor..." : "Kaydet"}
               </Button>
             </div>
           </div>
@@ -656,7 +656,7 @@ export default function OgrenciDetayPage() {
             <DialogTitle>Seriyi Durdur</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-slate-600">
-            Bu seri durdurulduÄŸunda, seÃ§tiÄŸiniz tarihten itibaren dersler iptal edilir.
+            Bu seri durdurulduğunda, seçtiğiniz tarihten itibaren dersler iptal edilir.
           </p>
           <div className="space-y-2">
             <label className="flex items-center gap-2 rounded-lg border p-3 text-sm">
@@ -688,7 +688,7 @@ export default function OgrenciDetayPage() {
           </div>
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => setStopDialogOpen(false)}>
-              Ä°ptal
+              İptal
             </Button>
             <Button variant="destructive" onClick={stopSeries} disabled={stopping}>
               {stopping ? "Durduruluyor..." : "Seriyi Durdur"}
@@ -699,4 +699,6 @@ export default function OgrenciDetayPage() {
     </section>
   );
 }
+
+
 
