@@ -117,7 +117,11 @@ function getRecurrenceLabel(
   return "Seri: Haftalık";
 }
 
-export function CalendarBoard() {
+type CalendarBoardProps = {
+  initialDate?: string;
+};
+
+export function CalendarBoard({ initialDate }: CalendarBoardProps) {
   const [editor, setEditor] = useState<EditorState>(DEFAULT_STATE);
   const [open, setOpen] = useState(false);
   const [showCancelled, setShowCancelled] = useState(false);
@@ -430,6 +434,7 @@ export function CalendarBoard() {
         <FullCalendar
           plugins={[timeGridPlugin, dayGridPlugin, interactionPlugin]}
           initialView="timeGridDay"
+          initialDate={initialDate}
           headerToolbar={
             isMobile
               ? {

@@ -1,6 +1,8 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { z } from "zod";
+import { Lock, User } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,9 +11,60 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { formatDateTR } from "@/lib/format";
 import { useSettings } from "@/hooks/useSettings";
+import { useProfile } from "@/hooks/useProfile";
+
+const profilePasswordSchema = z
+  .object({
+    full_name: z.string().trim().min(2, "Ad Soyad en az 2 karakter olmalıdır."),
+    currentPassword: z.string(),
+    newPassword: z.string(),
+    newPasswordRepeat: z.string(),
+  })
+  .superRefine((value, ctx) => {
+    const wantsPasswordChange = Boolean(
+      value.currentPassword || value.newPassword || value.newPasswordRepeat,
+    );
+
+    if (!wantsPasswordChange) return;
+
+    if (!value.currentPassword || !value.newPassword || !value.newPasswordRepeat) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["currentPassword"],
+        message: "Şifre değiştirmek için tüm şifre alanlarını doldurun.",
+      });
+      return;
+    }
+
+    if (value.newPassword.length < 6) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["newPassword"],
+        message: "Yeni şifre en az 6 karakter olmalı.",
+      });
+    }
+
+    if (value.newPassword !== value.newPasswordRepeat) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["newPasswordRepeat"],
+        message: "Yeni şifre tekrarı eşleşmiyor.",
+      });
+    }
+  });
+
+async function parseError(response: Response, fallback: string) {
+  try {
+    const data = (await response.json()) as { error?: string };
+    return data.error ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
 
 export default function AyarlarPage() {
   const { data: settings, mutate } = useSettings();
+  const { data: profile, mutate: mutateProfile } = useProfile();
 
   const [adminEmail, setAdminEmail] = useState("");
   const [overdueDays, setOverdueDays] = useState(7);
@@ -26,6 +79,14 @@ export default function AyarlarPage() {
     "UCRET_ALINMAZ" | "YARIM_UCRET" | "TAM_UCRET"
   >("UCRET_ALINMAZ");
   const [saving, setSaving] = useState(false);
+
+  const [fullName, setFullName] = useState("");
+  const [profileEmail, setProfileEmail] = useState("");
+  const [username, setUsername] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [newPasswordRepeat, setNewPasswordRepeat] = useState("");
+  const [profileSaving, setProfileSaving] = useState(false);
 
   useEffect(() => {
     if (!settings) return;
@@ -44,10 +105,90 @@ export default function AyarlarPage() {
     setDefaultNoShowFeeRule(settings.default_no_show_fee_rule ?? "UCRET_ALINMAZ");
   }, [settings]);
 
+  useEffect(() => {
+    if (!profile) return;
+    setProfileEmail(profile.email ?? "");
+    setFullName(profile.full_name ?? "");
+    setUsername(profile.username ?? "");
+  }, [profile]);
+
   const holidayItems = useMemo(
     () => [...holidays].sort((a, b) => a.localeCompare(b)),
     [holidays],
   );
+
+  const usernameDisplay = useMemo(() => {
+    if (username) return username;
+    if (!profileEmail) return "";
+    return profileEmail.split("@")[0] ?? "";
+  }, [profileEmail, username]);
+
+  const saveProfileAndPassword = async () => {
+    const parsed = profilePasswordSchema.safeParse({
+      full_name: fullName,
+      currentPassword,
+      newPassword,
+      newPasswordRepeat,
+    });
+
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message ?? "Profil güncellenemedi.");
+      return;
+    }
+
+    setProfileSaving(true);
+
+    const profileResponse = await fetch("/api/profile", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        full_name: parsed.data.full_name,
+      }),
+    });
+
+    if (!profileResponse.ok) {
+      setProfileSaving(false);
+      toast.error(await parseError(profileResponse, "Profil güncellenemedi."));
+      return;
+    }
+
+    await mutateProfile();
+    toast.success("Profil güncellendi.");
+
+    const wantsPasswordChange = Boolean(
+      parsed.data.currentPassword ||
+        parsed.data.newPassword ||
+        parsed.data.newPasswordRepeat,
+    );
+
+    if (!wantsPasswordChange) {
+      setProfileSaving(false);
+      return;
+    }
+
+    const passwordResponse = await fetch("/api/auth/change-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        currentPassword: parsed.data.currentPassword,
+        newPassword: parsed.data.newPassword,
+      }),
+    });
+
+    setProfileSaving(false);
+
+    if (!passwordResponse.ok) {
+      toast.error(
+        await parseError(passwordResponse, "Şifre güncellenemedi, tekrar deneyin."),
+      );
+      return;
+    }
+
+    setCurrentPassword("");
+    setNewPassword("");
+    setNewPasswordRepeat("");
+    toast.success("Şifre güncellendi.");
+  };
 
   const saveSettings = async () => {
     setSaving(true);
@@ -83,9 +224,7 @@ export default function AyarlarPage() {
       toast.warning("Bu tarih zaten tatil olarak ekli.");
       return;
     }
-    setHolidays((prev) =>
-      [...prev, holidayInput].sort((a, b) => a.localeCompare(b)),
-    );
+    setHolidays((prev) => [...prev, holidayInput].sort((a, b) => a.localeCompare(b)));
     setHolidayInput("");
   };
 
@@ -96,6 +235,79 @@ export default function AyarlarPage() {
   return (
     <section className="space-y-6">
       <PageHeader title="Ayarlar" subtitle="Sistem ve kullanıcı ayarları" />
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <User className="h-5 w-5" />
+            Profil Ayarları
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4 text-sm text-slate-600">
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="space-y-1">
+              <Label>Kullanıcı Adı</Label>
+              <Input value={usernameDisplay} disabled readOnly />
+              <p className="text-xs text-slate-500">Kullanıcı adı değiştirilemez</p>
+            </div>
+            <div className="space-y-1">
+              <Label>E-posta</Label>
+              <Input value={profileEmail} disabled readOnly />
+            </div>
+            <div className="space-y-1 md:col-span-2">
+              <Label>Ad Soyad</Label>
+              <Input
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="Ad Soyad"
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Lock className="h-5 w-5" />
+            Şifre Değiştir
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4 text-sm text-slate-600">
+          <p className="text-xs text-slate-500">
+            Şifrenizi değiştirmek istemiyorsanız bu alanları boş bırakın.
+          </p>
+          <div className="grid gap-3 md:grid-cols-3">
+            <div className="space-y-1">
+              <Label>Mevcut Şifre</Label>
+              <Input
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>Yeni Şifre</Label>
+              <Input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>Yeni Şifre (Tekrar)</Label>
+              <Input
+                type="password"
+                value={newPasswordRepeat}
+                onChange={(e) => setNewPasswordRepeat(e.target.value)}
+              />
+            </div>
+          </div>
+          <Button onClick={saveProfileAndPassword} disabled={profileSaving}>
+            {profileSaving ? "Kaydediliyor..." : "Değişiklikleri Kaydet"}
+          </Button>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
@@ -212,7 +424,7 @@ export default function AyarlarPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Ücret & No-show Politikası</CardTitle>
+          <CardTitle>Ücret ve No-show Politikası</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 text-sm text-slate-600">
           <div className="grid gap-3 md:grid-cols-2">
@@ -244,11 +456,10 @@ export default function AyarlarPage() {
             </div>
           </div>
           <p className="text-xs text-slate-500">
-            Gelmedi olarak işaretlenen derslerde, ücret bu kurala göre otomatik
-            hesaplanır.
+            Gelmedi olarak işaretlenen derslerde, ücret bu kurala göre otomatik hesaplanır.
           </p>
           <Button onClick={saveSettings} disabled={saving}>
-            {saving ? "Kaydediliyor..." : "Ayarları Kaydet"}
+            {saving ? "Kaydediliyor..." : "Genel Ayarları Kaydet"}
           </Button>
         </CardContent>
       </Card>

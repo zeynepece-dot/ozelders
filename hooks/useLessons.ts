@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import useSWR from "swr";
 import { fetcher } from "@/lib/fetcher";
@@ -11,6 +11,7 @@ export type LessonApiResponse = {
   end_datetime: string;
   status: "PLANLANDI" | "YAPILDI" | "GELMEDI" | "IPTAL";
   payment_status: "ODENDI" | "ODENMEDI" | "KISMI";
+  fee_total: number | string;
   amount_paid: number | string;
   duration_hours: number | string;
   hourly_rate: number | string;
@@ -26,3 +27,4 @@ export type LessonApiResponse = {
 export function useLessons() {
   return useSWR<LessonApiResponse[]>("/api/lessons", fetcher);
 }
+

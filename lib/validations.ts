@@ -97,6 +97,15 @@ export const settingsUpdateSchema = z.object({
     .optional(),
 });
 
+export const profileUpsertSchema = z.object({
+  full_name: z.string().trim().min(2, "Ad Soyad en az 2 karakter olmalıdır."),
+  username: z.string().trim().optional().or(z.literal("")),
+});
+
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, "Mevcut şifre zorunludur."),
+  newPassword: z.string().min(6, "Yeni şifre en az 6 karakter olmalı."),
+});
 
 export const calendarNoteSchema = z.object({
   title: z.string().min(2, "Takvim notu başlığı zorunludur."),

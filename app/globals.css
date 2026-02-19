@@ -185,3 +185,9 @@ body {
     font-size: 18px;
   }
 }
+
+@supports (-webkit-touch-callout: none) {
+  .ios-scroll {
+    -webkit-overflow-scrolling: touch;
+  }
+}
