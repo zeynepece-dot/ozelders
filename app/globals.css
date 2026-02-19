@@ -1,0 +1,171 @@
+﻿@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 210 40% 98%;
+  --foreground: 222 47% 11%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 47% 11%;
+  --primary: 173 84% 32%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 215 22% 93%;
+  --secondary-foreground: 222 47% 11%;
+  --muted: 215 20% 95%;
+  --muted-foreground: 215 16% 40%;
+  --accent: 214 32% 91%;
+  --accent-foreground: 222 47% 11%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 214 32% 88%;
+  --input: 214 32% 88%;
+  --ring: 173 84% 32%;
+  --radius: 1rem;
+  --navy-950: #0b1220;
+  --navy-900: #0f1e36;
+  --navy-800: #142b4d;
+  --navy-700: #1a3a66;
+  --event-blue: #2563eb;
+  --event-blue-dark: #1d4ed8;
+  --grid-line: #e5e7eb;
+}
+
+body {
+  min-height: 100vh;
+  background: radial-gradient(circle at 0% 0%, #dbeafe, transparent 35%),
+    radial-gradient(circle at 100% 0%, #ccfbf1, transparent 30%),
+    hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+.fc .fc-timegrid-now-indicator-line {
+  border-color: #0f766e;
+}
+
+.fc .fc-timegrid-now-indicator-arrow {
+  border-top-color: #0f766e;
+  border-bottom-color: #0f766e;
+}
+
+/* FullCalendar: header buttons */
+.fc .fc-button {
+  border-radius: 10px;
+  box-shadow: none;
+  font-weight: 600;
+}
+
+.fc .fc-button-primary {
+  background: var(--navy-800);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.fc .fc-button-primary:hover {
+  background: var(--navy-700);
+}
+
+.fc .fc-button-primary:focus {
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
+}
+
+.fc .fc-button-primary:not(:disabled).fc-button-active,
+.fc .fc-button-primary:not(:disabled):active {
+  background: var(--navy-900);
+}
+
+.fc .fc-button-primary:disabled {
+  background: #334155;
+  border-color: #334155;
+}
+
+.fc .fc-toolbar-title {
+  font-weight: 700;
+  color: var(--navy-900);
+}
+
+.fc .fc-today-button {
+  background: transparent;
+  color: var(--navy-900);
+  border: 1px solid var(--grid-line);
+}
+
+.fc .fc-today-button:hover {
+  background: #f8fafc;
+}
+
+/* FullCalendar white surface + light grid */
+.fc,
+.fc .fc-view-harness,
+.fc .fc-scroller {
+  background: #fff;
+}
+
+.fc .fc-timegrid-slot-lane,
+.fc .fc-timegrid-col,
+.fc .fc-daygrid-day-frame {
+  background: #fff;
+}
+
+.fc .fc-scrollgrid,
+.fc .fc-scrollgrid td,
+.fc .fc-scrollgrid th {
+  border-color: var(--grid-line);
+}
+
+.fc .fc-timegrid-slot {
+  border-color: rgba(229, 231, 235, 0.7);
+}
+
+/* Event blocks: blue base */
+.fc .fc-event:not(.fc-bg-event) {
+  border: none;
+  border-radius: 10px;
+  background: var(--event-blue);
+  color: #fff;
+  padding: 2px 6px;
+}
+
+.fc .fc-event:not(.fc-bg-event):hover {
+  background: var(--event-blue-dark);
+}
+
+.fc .fc-event:not(.fc-bg-event) .fc-event-time,
+.fc .fc-event:not(.fc-bg-event) .fc-event-title {
+  color: #fff;
+}
+
+.fc .fc-event:not(.fc-bg-event) .fc-event-time {
+  font-weight: 500;
+}
+
+.fc .fc-event:not(.fc-bg-event) .fc-event-title {
+  font-weight: 600;
+}
+
+/* Keep status signal on left border while main face is blue */
+.fc .fc-event.status-paid {
+  border-left: 4px solid #22c55e;
+}
+
+.fc .fc-event.status-unpaid {
+  border-left: 4px solid #ef4444;
+}
+
+.fc .fc-event.status-partial {
+  border-left: 4px solid #eab308;
+}
+
+.fc .fc-event.status-noshow {
+  border-left: 4px solid #f59e0b;
+}
+
+.fc .fc-event.status-cancelled {
+  border-left: 4px solid #94a3b8;
+}
+
+.fc .fc-bg-event.fc-holiday-bg {
+  background: #fca5a5;
+  opacity: 0.22;
+}
