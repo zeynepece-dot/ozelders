@@ -37,6 +37,9 @@ type StudentDetailResponse = {
   subject: string;
   hourly_rate_default: number | string;
   phone: string | null;
+  email: string | null;
+  parent_name: string | null;
+  parent_phone: string | null;
   lessons: Lesson[];
 };
 
@@ -574,10 +577,17 @@ export default function OgrenciDetayPage() {
           <CardHeader>
             <CardTitle>Genel</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            <p>Ders: {student.subject}</p>
-            <p>Saat Ücreti: {formatCurrencyTRY(Number(student.hourly_rate_default))}</p>
-            <p>Telefon: {student.phone ?? "-"}</p>
+          <CardContent className="grid gap-3 text-sm md:grid-cols-2">
+            <div className="space-y-2">
+              <p>Ders: {student.subject || "-"}</p>
+              <p>Saat Ücreti: {formatCurrencyTRY(Number(student.hourly_rate_default))}</p>
+            </div>
+            <div className="space-y-2">
+              <p>Telefon: {student.phone || "-"}</p>
+              <p>E-posta: {student.email || "-"}</p>
+              <p>Veli Adı: {student.parent_name || "-"}</p>
+              <p>Veli Telefon: {student.parent_phone || "-"}</p>
+            </div>
           </CardContent>
         </Card>
         <Card>

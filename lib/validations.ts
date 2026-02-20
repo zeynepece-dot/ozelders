@@ -35,6 +35,17 @@ export const studentUpdateSchema = studentCreateSchema.partial().extend({
   subject: z.string().min(1, "Lütfen bir ders seçin veya yazın.").optional(),
 });
 
+export const studentDetailResponseSchema = z.object({
+  id: z.string().uuid(),
+  full_name: z.string(),
+  subject: z.string(),
+  hourly_rate_default: z.union([z.number(), z.string()]),
+  phone: z.string().optional().nullable(),
+  email: z.string().optional().nullable(),
+  parent_name: z.string().optional().nullable(),
+  parent_phone: z.string().optional().nullable(),
+});
+
 export const lessonUpsertSchema = z.object({
   id: z.string().uuid().optional(),
   studentId: z.string().uuid("Öğrenci seçimi zorunludur."),

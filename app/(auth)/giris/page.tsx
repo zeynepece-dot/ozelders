@@ -1,7 +1,7 @@
 ﻿"use client";
 
-import { useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -45,7 +45,6 @@ function LoadingSpinner() {
 
 export default function GirisPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const allowSignUp = process.env.NEXT_PUBLIC_ALLOW_SIGNUP !== "false";
 
   const [tab, setTab] = useState<"signin" | "signup">("signin");
@@ -54,17 +53,20 @@ export default function GirisPage() {
   const [resendLoading, setResendLoading] = useState(false);
   const [forgotOpen, setForgotOpen] = useState(false);
   const [forgotLoading, setForgotLoading] = useState(false);
+  const [authNotice, setAuthNotice] = useState("");
 
-  const authNotice = useMemo(() => {
-    const code = searchParams.get("e");
+  useEffect(() => {
+    const code = new URLSearchParams(window.location.search).get("e");
     if (code === "dogrulama_linki_hatali") {
-      return "Doğrulama linki geçersiz veya süresi dolmuş. Lütfen tekrar deneyin.";
+      setAuthNotice("Doğrulama linki geçersiz veya süresi dolmuş. Lütfen tekrar deneyin.");
+      return;
     }
     if (code === "dogrulama_basarisiz") {
-      return "E-posta doğrulama başarısız oldu. Lütfen yeni link isteyin.";
+      setAuthNotice("E-posta doğrulama başarısız oldu. Lütfen yeni link isteyin.");
+      return;
     }
-    return "";
-  }, [searchParams]);
+    setAuthNotice("");
+  }, []);
 
   const supabase = useMemo(() => {
     if (
