@@ -95,6 +95,33 @@ Uygulama: `http://localhost:3000`
   `Project Settings -> Functions Region`
 - Referans: https://vercel.com/docs/functions/configuring-functions/region
 
+## Windows Line Endings
+
+Windows ortamında `LF will be replaced by CRLF` uyarılarını kalıcı azaltmak için:
+
+```bash
+git status
+git add --renormalize .
+git status
+git commit -m "chore: normalize line endings (LF)"
+git push
+```
+
+Eğer `git add --renormalize` desteklenmiyorsa fallback:
+
+```bash
+git rm --cached -r .
+git add .
+git commit -m "chore: normalize line endings (LF)"
+git push
+```
+
+Sadece bu repo için istersen:
+
+```bash
+git config core.autocrlf false
+```
+
 ## Özellikler
 
 - Türkçe arayüz
