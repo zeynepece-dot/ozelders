@@ -39,10 +39,21 @@ Supabase Dashboard > Authentication > URL Configuration:
 
 - `Site URL`: production domaininiz (ve localhost)
 - `Redirect URLs` içine ekleyin:
+  - `http://localhost:3000/auth/confirm`
+  - `https://<domain>/auth/confirm`
   - `http://localhost:3000/auth/reset`
   - `https://<domain>/auth/reset`
 
 Bu ayar yapılmazsa şifre sıfırlama linki doğru sayfaya dönmeyebilir.
+
+## Yayın Notu
+
+- Vercel production domain değiştiğinde Supabase `URL Configuration` içindeki
+  `Site URL` ve `Redirect URLs` alanlarını güncelleyin.
+- Canlıya yansıtma kontrol listesi:
+  - `git add` / `git commit` / `git push`
+  - Vercel Production deploy durumunu doğrulayın
+  - iOS Safari tarafında eski bundle kalmışsa cache kırarak tekrar test edin
 
 ## 3) SQL Migration Çalıştırma (Supabase SQL Editor)
 

@@ -1,15 +1,12 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import {
-  mapSupabaseAuthError,
-  mapSupabaseResetRequestError,
-} from "@/lib/auth/error-map";
+import { mapSupabaseResetRequestError } from "@/lib/auth/error-map";
 import { authSignInSchema, authSignUpSchema } from "@/lib/validations";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -48,12 +45,26 @@ function LoadingSpinner() {
 
 export default function GirisPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const allowSignUp = process.env.NEXT_PUBLIC_ALLOW_SIGNUP !== "false";
 
   const [tab, setTab] = useState<"signin" | "signup">("signin");
   const [signupMessage, setSignupMessage] = useState("");
+  const [signupEmail, setSignupEmail] = useState("");
+  const [resendLoading, setResendLoading] = useState(false);
   const [forgotOpen, setForgotOpen] = useState(false);
   const [forgotLoading, setForgotLoading] = useState(false);
+
+  const authNotice = useMemo(() => {
+    const code = searchParams.get("e");
+    if (code === "dogrulama_linki_hatali") {
+      return "Doğrulama linki geçersiz veya süresi dolmuş. Lütfen tekrar deneyin.";
+    }
+    if (code === "dogrulama_basarisiz") {
+      return "E-posta doğrulama başarısız oldu. Lütfen yeni link isteyin.";
+    }
+    return "";
+  }, [searchParams]);
 
   const supabase = useMemo(() => {
     if (
@@ -92,7 +103,7 @@ export default function GirisPage() {
     });
 
     if (error) {
-      toast.error(mapSupabaseAuthError(error.message));
+      toast.error("E-posta veya şifre hatalı.");
       return;
     }
 
@@ -107,9 +118,10 @@ export default function GirisPage() {
     }
 
     setSignupMessage("");
+    setSignupEmail("");
     const emailRedirectTo =
       typeof window !== "undefined"
-        ? `${window.location.origin}/auth/callback`
+        ? `${window.location.origin}/auth/confirm`
         : undefined;
 
     const { data, error } = await supabase.auth.signUp({
@@ -121,7 +133,15 @@ export default function GirisPage() {
     });
 
     if (error) {
-      toast.error(mapSupabaseAuthError(error.message));
+      const normalized = error.message.toLowerCase();
+      if (
+        normalized.includes("already registered") ||
+        normalized.includes("already been registered")
+      ) {
+        toast.error("Bu e-posta zaten kayıtlı olabilir.");
+        return;
+      }
+      toast.error("Kayıt sırasında hata oluştu. Tekrar deneyin.");
       return;
     }
 
@@ -131,9 +151,39 @@ export default function GirisPage() {
       return;
     }
 
+    setSignupEmail(values.email);
     setSignupMessage(
-      "Hesabın oluşturuldu. Lütfen e-postana gelen doğrulama linkine tıkla.",
+      "Doğrulama e-postası gönderildi. Lütfen gelen kutunuzu kontrol edin.",
     );
+    setTab("signin");
+    signUpForm.reset();
+  }
+
+  async function handleResendSignupEmail() {
+    if (!supabase || !signupEmail) {
+      toast.error("E-posta tekrar gönderilemedi. Lütfen tekrar deneyin.");
+      return;
+    }
+
+    setResendLoading(true);
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email: signupEmail,
+      options: {
+        emailRedirectTo:
+          typeof window !== "undefined"
+            ? `${window.location.origin}/auth/confirm`
+            : undefined,
+      },
+    });
+    setResendLoading(false);
+
+    if (error) {
+      toast.error("E-posta tekrar gönderilemedi. Lütfen tekrar deneyin.");
+      return;
+    }
+
+    toast.success("Doğrulama e-postası tekrar gönderildi.");
   }
 
   async function handleForgotPassword(values: ForgotFormValues) {
@@ -175,7 +225,9 @@ export default function GirisPage() {
             value={tab}
             onValueChange={(value) => {
               setTab(value as "signin" | "signup");
-              setSignupMessage("");
+              if (value === "signup") {
+                setSignupMessage("");
+              }
             }}
             className="w-full"
           >
@@ -187,6 +239,13 @@ export default function GirisPage() {
             </TabsList>
 
             <TabsContent value="signin">
+              {signupMessage || authNotice ? (
+                <Alert className="mb-4">
+                  <AlertTitle>E-posta Doğrulama</AlertTitle>
+                  <AlertDescription>{authNotice || signupMessage}</AlertDescription>
+                </Alert>
+              ) : null}
+
               <form className="space-y-4" onSubmit={signInForm.handleSubmit(handleSignIn)}>
                 <div className="space-y-2">
                   <Label htmlFor="signin-email">E-posta</Label>
@@ -199,7 +258,11 @@ export default function GirisPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signin-password">Şifre</Label>
-                  <Input id="signin-password" type="password" {...signInForm.register("password")} />
+                  <Input
+                    id="signin-password"
+                    type="password"
+                    {...signInForm.register("password")}
+                  />
                   {signInForm.formState.errors.password ? (
                     <p className="text-xs text-red-600">
                       {signInForm.formState.errors.password.message}
@@ -220,6 +283,7 @@ export default function GirisPage() {
                     "Giriş Yap"
                   )}
                 </Button>
+
                 <button
                   type="button"
                   className="w-full text-sm text-slate-600 underline"
@@ -227,6 +291,25 @@ export default function GirisPage() {
                 >
                   Şifremi unuttum
                 </button>
+
+                {signupEmail ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    onClick={handleResendSignupEmail}
+                    disabled={resendLoading}
+                  >
+                    {resendLoading ? (
+                      <span className="inline-flex items-center gap-2">
+                        <LoadingSpinner />
+                        Gönderiliyor...
+                      </span>
+                    ) : (
+                      "Doğrulama e-postasını tekrar gönder"
+                    )}
+                  </Button>
+                ) : null}
               </form>
             </TabsContent>
 
@@ -244,7 +327,11 @@ export default function GirisPage() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-password">Şifre</Label>
-                    <Input id="signup-password" type="password" {...signUpForm.register("password")} />
+                    <Input
+                      id="signup-password"
+                      type="password"
+                      {...signUpForm.register("password")}
+                    />
                     {signUpForm.formState.errors.password ? (
                       <p className="text-xs text-red-600">
                         {signUpForm.formState.errors.password.message}
@@ -264,12 +351,7 @@ export default function GirisPage() {
                       </p>
                     ) : null}
                   </div>
-                  {signupMessage ? (
-                    <Alert>
-                      <AlertTitle>E-posta Doğrulama</AlertTitle>
-                      <AlertDescription>{signupMessage}</AlertDescription>
-                    </Alert>
-                  ) : null}
+
                   <Button
                     className="w-full"
                     type="submit"
