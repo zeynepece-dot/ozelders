@@ -214,7 +214,7 @@ export default function GirisPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
+    <div className="flex min-h-[100dvh] items-center justify-center p-4">
       <Card className="w-full max-w-md border-slate-200 bg-white/90 backdrop-blur">
         <CardHeader>
           <CardTitle>Hesabına Giriş Yap</CardTitle>
@@ -412,3 +412,4 @@ export default function GirisPage() {
     </div>
   );
 }
+

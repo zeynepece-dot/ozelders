@@ -6,10 +6,12 @@ export default async function PanelLayout({ children }: { children: React.ReactN
   await requireUser();
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-[100dvh]">
       <DashboardPrefetch />
       <Sidebar />
-      <main className="w-full p-4 pt-14 md:p-6 md:pt-6 lg:p-8">{children}</main>
+      <main className="w-full p-4 pt-[calc(3.5rem+env(safe-area-inset-top))] md:p-6 md:pt-6 lg:p-8">
+        {children}
+      </main>
     </div>
   );
 }

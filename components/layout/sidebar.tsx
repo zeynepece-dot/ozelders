@@ -61,8 +61,8 @@ export function Sidebar() {
         </div>
       </aside>
 
-      <header className="fixed left-0 right-0 top-0 z-[80] h-14 border-b border-white/10 bg-gradient-to-r from-[var(--navy-950)] via-[var(--navy-900)] to-[var(--navy-800)] text-white backdrop-blur md:hidden">
-        <div className="flex h-full items-center gap-3 px-3">
+      <header className="fixed inset-x-0 top-0 z-[80] h-[calc(3.5rem+env(safe-area-inset-top))] w-full border-b border-white/10 bg-gradient-to-r from-[var(--navy-950)] via-[var(--navy-900)] to-[var(--navy-800)] pt-[env(safe-area-inset-top)] text-white backdrop-blur md:hidden">
+        <div className="flex h-14 items-center gap-3 px-3">
           <button
             type="button"
             aria-label="Menüyü aç"
