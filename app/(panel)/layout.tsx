@@ -9,7 +9,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
     <div className="flex min-h-[100dvh]">
       <DashboardPrefetch />
       <Sidebar />
-      <main className="w-full p-4 pt-[calc(3.5rem+env(safe-area-inset-top))] md:p-6 md:pt-6 lg:p-8">
+      <main className="w-full p-4 pt-[calc(72px+env(safe-area-inset-top))] md:p-6 md:pt-[84px] lg:p-8">
         {children}
       </main>
     </div>

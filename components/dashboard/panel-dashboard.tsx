@@ -113,7 +113,7 @@ export function PanelDashboard() {
   ];
 
   return (
-    <div className="space-y-4 md:space-y-6">
+    <div className="mt-3 space-y-4 md:space-y-6">
       <div className="space-y-3">
         <Button
           asChild
