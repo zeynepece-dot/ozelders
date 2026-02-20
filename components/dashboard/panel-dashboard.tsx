@@ -1,20 +1,11 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import {
-  addDays,
-  endOfMonth,
-  endOfWeek,
-  format,
-  isWithinInterval,
-  parseISO,
-  startOfMonth,
-  startOfWeek,
-} from "date-fns";
+import { addDays, endOfWeek, format, parseISO, startOfWeek } from "date-fns";
 import { tr } from "date-fns/locale";
 import { CalendarDays, Coins, HandCoins, Wallet } from "lucide-react";
-import { useLessons, type LessonApiResponse } from "@/hooks/useLessons";
+import { useDashboardSummary, type DashboardWeekLesson } from "@/hooks/useDashboardSummary";
 import { formatCurrencyTRY } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,112 +19,62 @@ type KpiCard = {
 type DaySchedule = {
   key: string;
   day: Date;
-  lessons: LessonApiResponse[];
+  lessons: DashboardWeekLesson[];
 };
-
-function parseNumber(value: number | string | undefined) {
-  return Number(value ?? 0);
-}
 
 function toDate(value: string) {
   const parsed = parseISO(value);
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
-function lessonFeeTotal(lesson: LessonApiResponse) {
-  const explicitFee = parseNumber(lesson.fee_total);
-  if (Number.isFinite(explicitFee) && explicitFee > 0) return explicitFee;
-  return parseNumber(lesson.hourly_rate) * parseNumber(lesson.duration_hours);
-}
-
-function statusBadgeClass(status: LessonApiResponse["status"]) {
+function statusBadgeClass(status: DashboardWeekLesson["status"]) {
   if (status === "YAPILDI") return "bg-emerald-100 text-emerald-700";
   if (status === "GELMEDI") return "bg-amber-100 text-amber-700";
-  if (status === "IPTAL") return "bg-slate-200 text-slate-600";
   return "bg-blue-100 text-blue-700";
 }
 
-function statusLabel(status: LessonApiResponse["status"]) {
+function statusLabel(status: DashboardWeekLesson["status"]) {
   if (status === "YAPILDI") return "Yapıldı";
   if (status === "GELMEDI") return "Gelmedi";
-  if (status === "IPTAL") return "İptal";
   return "Planlandı";
 }
 
-function paymentBadgeClass(paymentStatus: LessonApiResponse["payment_status"]) {
+function paymentBadgeClass(paymentStatus: DashboardWeekLesson["payment_status"]) {
   if (paymentStatus === "ODENDI") return "bg-emerald-100 text-emerald-700";
   if (paymentStatus === "KISMI") return "bg-amber-100 text-amber-700";
   return "bg-rose-100 text-rose-700";
 }
 
-function paymentLabel(paymentStatus: LessonApiResponse["payment_status"]) {
+function paymentLabel(paymentStatus: DashboardWeekLesson["payment_status"]) {
   if (paymentStatus === "ODENDI") return "Ödendi";
   if (paymentStatus === "KISMI") return "Kısmi";
   return "Ödenmedi";
 }
 
 export function PanelDashboard() {
-  const { data: lessons = [] } = useLessons();
-  const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
+  const [weekStart, setWeekStart] = useState(() =>
+    startOfWeek(new Date(), { weekStartsOn: 1 }),
+  );
+  const weekStartKey = useMemo(() => format(weekStart, "yyyy-MM-dd"), [weekStart]);
+  const { data: summary } = useDashboardSummary(weekStartKey);
 
   const weekEnd = useMemo(() => endOfWeek(weekStart, { weekStartsOn: 1 }), [weekStart]);
-  const monthStart = useMemo(() => startOfMonth(new Date()), []);
-  const monthEnd = useMemo(() => endOfMonth(new Date()), []);
-
-  const activeLessons = useMemo(
-    () => lessons.filter((lesson) => lesson.status !== "IPTAL"),
-    [lessons],
+  const weekLessons = useMemo(
+    () => summary?.upcomingWeekLessons ?? [],
+    [summary?.upcomingWeekLessons],
   );
 
-  const metrics = useMemo(() => {
-    let weekCollected = 0;
-    let monthCollected = 0;
-    let expectedPayments = 0;
-    let monthPotential = 0;
-
-    for (const lesson of activeLessons) {
-      const startDate = toDate(lesson.start_datetime);
-      if (!startDate) continue;
-
-      const amountPaid = parseNumber(lesson.amount_paid);
-      const feeTotal = lessonFeeTotal(lesson);
-
-      if (isWithinInterval(startDate, { start: weekStart, end: weekEnd })) {
-        weekCollected += amountPaid;
-      }
-
-      if (isWithinInterval(startDate, { start: monthStart, end: monthEnd })) {
-        monthCollected += amountPaid;
-        monthPotential += feeTotal;
-      }
-
-      expectedPayments += Math.max(feeTotal - amountPaid, 0);
-    }
-
-    return {
-      weekCollected,
-      monthCollected,
-      expectedPayments,
-      monthPotential,
-    };
-  }, [activeLessons, monthEnd, monthStart, weekEnd, weekStart]);
-
-  const weekLessons = useMemo(() => {
-    return activeLessons.filter((lesson) => {
-      const startDate = toDate(lesson.start_datetime);
-      if (!startDate) return false;
-      return isWithinInterval(startDate, { start: weekStart, end: weekEnd });
-    });
-  }, [activeLessons, weekEnd, weekStart]);
-
   const weeklySchedule = useMemo<DaySchedule[]>(() => {
-    const groups = weekLessons.reduce<Record<string, LessonApiResponse[]>>((acc, lesson) => {
-      const startDate = toDate(lesson.start_datetime);
-      if (!startDate) return acc;
-      const key = format(startDate, "yyyy-MM-dd");
-      (acc[key] ||= []).push(lesson);
-      return acc;
-    }, {});
+    const groups = weekLessons.reduce<Record<string, DashboardWeekLesson[]>>(
+      (acc, lesson) => {
+        const startDate = toDate(lesson.start_datetime);
+        if (!startDate) return acc;
+        const key = format(startDate, "yyyy-MM-dd");
+        (acc[key] ||= []).push(lesson);
+        return acc;
+      },
+      {},
+    );
 
     return Object.entries(groups)
       .map(([key, items]) => ({
@@ -151,22 +92,22 @@ export function PanelDashboard() {
   const kpiCards: KpiCard[] = [
     {
       title: "Bu Haftaki Kazanç",
-      value: formatCurrencyTRY(metrics.weekCollected),
+      value: formatCurrencyTRY(summary?.weeklyPaid ?? 0),
       icon: Coins,
     },
     {
       title: "Bu Aylık Kazanç",
-      value: formatCurrencyTRY(metrics.monthCollected),
+      value: formatCurrencyTRY(summary?.monthlyPaid ?? 0),
       icon: Wallet,
     },
     {
       title: "Beklenen Ödemeler",
-      value: formatCurrencyTRY(metrics.expectedPayments),
+      value: formatCurrencyTRY(summary?.expectedReceivables ?? 0),
       icon: HandCoins,
     },
     {
       title: "Bu Ayki Potansiyel Kazanç",
-      value: formatCurrencyTRY(metrics.monthPotential),
+      value: formatCurrencyTRY(summary?.monthlyPotential ?? 0),
       icon: CalendarDays,
     },
   ];
@@ -174,7 +115,11 @@ export function PanelDashboard() {
   return (
     <div className="space-y-4 md:space-y-6">
       <div className="space-y-3">
-        <Button asChild size="lg" className="h-auto w-full justify-center px-5 py-4 text-base font-semibold">
+        <Button
+          asChild
+          size="lg"
+          className="h-auto w-full justify-center px-5 py-4 text-base font-semibold"
+        >
           <Link href="/ogrenciler">🎓 Öğrenci Ekle/Güncelle</Link>
         </Button>
         <Card className="border-slate-200 bg-white shadow-sm">
@@ -205,7 +150,12 @@ export function PanelDashboard() {
 
       <section className="space-y-3">
         <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-3 shadow-sm">
-          <Button type="button" size="sm" variant="outline" onClick={() => setWeekStart((prev) => addDays(prev, -7))}>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => setWeekStart((prev) => addDays(prev, -7))}
+          >
             ◀ Önceki Hafta
           </Button>
           <div className="text-center">
@@ -214,7 +164,12 @@ export function PanelDashboard() {
             </p>
             <p className="text-xs text-slate-500">Haftalık Program</p>
           </div>
-          <Button type="button" size="sm" variant="outline" onClick={() => setWeekStart((prev) => addDays(prev, 7))}>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => setWeekStart((prev) => addDays(prev, 7))}
+          >
             Sonraki Hafta ▶
           </Button>
         </div>
@@ -229,7 +184,9 @@ export function PanelDashboard() {
                   variant="ghost"
                   className="mt-2 h-auto w-full justify-start px-0 text-sm font-medium text-teal-700 hover:bg-transparent hover:text-teal-800"
                 >
-                  <Link href={`/takvim?date=${format(weekStart, "yyyy-MM-dd")}`}>+ Ek Ders Ekle</Link>
+                  <Link href={`/takvim?date=${format(weekStart, "yyyy-MM-dd")}`}>
+                    + Ek Ders Ekle
+                  </Link>
                 </Button>
               </CardContent>
             </Card>
@@ -244,10 +201,16 @@ export function PanelDashboard() {
               <CardContent className="space-y-3 p-4">
                 <div className="space-y-2">
                   {dayLessons.map((lesson) => (
-                    <div key={lesson.id} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                    <div
+                      key={lesson.id}
+                      className="rounded-xl border border-slate-200 bg-slate-50 p-3"
+                    >
                       <div className="mb-2 flex items-center justify-between gap-2">
                         <p className="text-sm font-semibold text-slate-900">
-                          {format(toDate(lesson.start_datetime) ?? new Date(), "HH:mm", { locale: tr })} - {lesson.students.full_name}
+                          {format(toDate(lesson.start_datetime) ?? new Date(), "HH:mm", {
+                            locale: tr,
+                          })}{" "}
+                          - {lesson.student_name}
                         </p>
                       </div>
                       <div className="flex flex-wrap gap-2">
@@ -266,8 +229,14 @@ export function PanelDashboard() {
                   ))}
                 </div>
 
-                <Button asChild variant="ghost" className="h-auto w-full justify-start px-0 text-sm font-medium text-teal-700 hover:bg-transparent hover:text-teal-800">
-                  <Link href={`/takvim?date=${format(day, "yyyy-MM-dd")}`}>+ Ek Ders Ekle</Link>
+                <Button
+                  asChild
+                  variant="ghost"
+                  className="h-auto w-full justify-start px-0 text-sm font-medium text-teal-700 hover:bg-transparent hover:text-teal-800"
+                >
+                  <Link href={`/takvim?date=${format(day, "yyyy-MM-dd")}`}>
+                    + Ek Ders Ekle
+                  </Link>
                 </Button>
               </CardContent>
             </Card>
@@ -277,4 +246,3 @@ export function PanelDashboard() {
     </div>
   );
 }
-

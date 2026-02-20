@@ -78,6 +78,12 @@ Uygulama: `http://localhost:3000`
 3. Sonraki girişlerde sadece giriş ekranı kullanılır.
 4. `Ayarlar` sayfasından `Demo Veri Yükle` butonuna basarak örnek veri ekleyin.
 
+## Production Notu (Gecikme)
+
+- Vercel Functions region'i, Supabase projenize en yakın bölge olacak şekilde seçilmelidir:
+  `Project Settings -> Functions Region`
+- Referans: https://vercel.com/docs/functions/configuring-functions/region
+
 ## Özellikler
 
 - Türkçe arayüz

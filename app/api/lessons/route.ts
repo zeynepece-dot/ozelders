@@ -7,14 +7,28 @@ import { computeLessonFee, normalizePayment } from "@/server/services/financeSer
 
 const READ_CACHE_HEADERS = { "Cache-Control": "private, max-age=30" };
 
-export async function GET() {
+export async function GET(request: Request) {
   const { supabase, user } = await requireApiUser();
   if (!user) return unauthorized();
 
-  const { data, error } = await supabase
+  const { searchParams } = new URL(request.url);
+  const from = searchParams.get("from");
+  const to = searchParams.get("to");
+
+  let query = supabase
     .from("lessons")
     .select("*, students!inner(full_name), recurrences(frequency, interval_weeks)")
     .order("start_datetime", { ascending: true });
+
+  if (from) {
+    query = query.gte("start_datetime", `${from}T00:00:00`);
+  }
+
+  if (to) {
+    query = query.lte("start_datetime", `${to}T23:59:59`);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     return badRequest("Dersler alınamadı.", error.message);

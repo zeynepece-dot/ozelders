@@ -1,13 +1,15 @@
+import { Skeleton } from "@/components/ui/skeleton";
+
 export default function RaporlarLoading() {
   return (
     <section className="space-y-4">
-      <div className="h-8 w-52 animate-pulse rounded bg-slate-200" />
+      <Skeleton className="h-8 w-52" />
       <div className="grid gap-3 md:grid-cols-3">
-        <div className="h-28 animate-pulse rounded-2xl bg-slate-100" />
-        <div className="h-28 animate-pulse rounded-2xl bg-slate-100" />
-        <div className="h-28 animate-pulse rounded-2xl bg-slate-100" />
+        <Skeleton className="h-28 rounded-2xl" />
+        <Skeleton className="h-28 rounded-2xl" />
+        <Skeleton className="h-28 rounded-2xl" />
       </div>
-      <div className="h-56 animate-pulse rounded-2xl bg-slate-100" />
+      <Skeleton className="h-56 rounded-2xl" />
     </section>
   );
 }
