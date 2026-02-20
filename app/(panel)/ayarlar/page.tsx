@@ -420,6 +420,16 @@ export default function AyarlarPage() {
           </Button>
         </CardContent>
       </Card>
+
+      <div className="mt-10 rounded-2xl border border-slate-200 bg-white p-4 text-sm">
+        <div className="text-slate-600">Bizimle iletişime geçebilirsiniz</div>
+        <a
+          href="mailto:cmansuroglu@gmail.com"
+          className="mt-1 inline-flex items-center gap-2 font-medium text-slate-900 hover:underline"
+        >
+          cmansuroglu@gmail.com
+        </a>
+      </div>
     </section>
   );
 }
