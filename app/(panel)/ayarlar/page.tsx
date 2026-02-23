@@ -348,7 +348,7 @@ export default function AyarlarPage() {
             <div className="space-y-1">
               <Label>Hafta başlangıcı</Label>
               <select
-                className="h-10 w-full rounded-xl border border-input bg-white px-3 text-sm"
+                className="h-10 w-full rounded-xl border border-input bg-white px-3 text-base md:text-sm"
                 value={weekStart}
                 onChange={(e) => setWeekStart(Number(e.target.value) as 0 | 1)}
               >
@@ -428,7 +428,7 @@ export default function AyarlarPage() {
             <div className="space-y-1">
               <Label>Varsayılan no-show ücret kuralı</Label>
               <select
-                className="h-10 w-full rounded-xl border border-input bg-white px-3 text-sm"
+                className="h-10 w-full rounded-xl border border-input bg-white px-3 text-base md:text-sm"
                 value={defaultNoShowFeeRule}
                 onChange={(e) =>
                   setDefaultNoShowFeeRule(

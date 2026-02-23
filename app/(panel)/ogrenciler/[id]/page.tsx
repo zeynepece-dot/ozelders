@@ -947,7 +947,7 @@ export default function OgrenciDetayPage() {
             <div className="space-y-1">
               <Label>Süre (saat)</Label>
               <select
-                className="h-10 w-full rounded-xl border border-input px-3 text-sm"
+                className="h-10 w-full rounded-xl border border-input px-3 text-base md:text-sm"
                 value={singleDuration}
                 onChange={(e) => setSingleDuration(Number(e.target.value))}
               >
@@ -961,7 +961,7 @@ export default function OgrenciDetayPage() {
             <div className="space-y-1">
               <Label>Durum</Label>
               <select
-                className="h-10 w-full rounded-xl border border-input px-3 text-sm"
+                className="h-10 w-full rounded-xl border border-input px-3 text-base md:text-sm"
                 value={singleStatus}
                 onChange={(e) => setSingleStatus(e.target.value as Lesson["status"])}
               >
@@ -974,7 +974,7 @@ export default function OgrenciDetayPage() {
             <div className="space-y-1">
               <Label>Ödeme durumu</Label>
               <select
-                className="h-10 w-full rounded-xl border border-input px-3 text-sm"
+                className="h-10 w-full rounded-xl border border-input px-3 text-base md:text-sm"
                 value={singlePayment}
                 onChange={(e) =>
                   setSinglePayment(e.target.value as "ODENDI" | "ODENMEDI" | "KISMI")
@@ -1022,7 +1022,7 @@ export default function OgrenciDetayPage() {
                 <div className="space-y-1">
                   <Label>Gün seçimi</Label>
                   <select
-                    className="h-10 w-full rounded-xl border border-input px-3 text-sm"
+                    className="h-10 w-full rounded-xl border border-input px-3 text-base md:text-sm"
                     value={weeklyWeekday}
                     onChange={(e) => {
                       const nextWeekday = Number(e.target.value);
@@ -1044,7 +1044,7 @@ export default function OgrenciDetayPage() {
                 <div className="space-y-1">
                   <Label>Süre (saat)</Label>
                   <select
-                    className="h-10 w-full rounded-xl border border-input px-3 text-sm"
+                    className="h-10 w-full rounded-xl border border-input px-3 text-base md:text-sm"
                     value={weeklyDuration}
                     onChange={(e) => setWeeklyDuration(Number(e.target.value))}
                   >
@@ -1090,7 +1090,7 @@ export default function OgrenciDetayPage() {
                 <div className="space-y-1">
                   <Label>No-show kuralı</Label>
                   <select
-                    className="h-10 w-full rounded-xl border border-input px-3 text-sm"
+                    className="h-10 w-full rounded-xl border border-input px-3 text-base md:text-sm"
                     value={weeklyNoShowRule}
                     onChange={(e) =>
                       setWeeklyNoShowRule(

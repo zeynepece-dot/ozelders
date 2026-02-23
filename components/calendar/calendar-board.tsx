@@ -666,7 +666,7 @@ export function CalendarBoard({ initialDate }: CalendarBoardProps) {
               <div className="space-y-1">
                 <Label>Durum</Label>
                 <select
-                  className="h-10 w-full rounded-xl border border-input px-3 text-sm"
+                  className="h-10 w-full rounded-xl border border-input px-3 text-base md:text-sm"
                   value={editor.status}
                   onChange={(e) => setEditor((prev) => ({ ...prev, status: e.target.value as EditorState["status"] }))}
                 >
@@ -681,7 +681,7 @@ export function CalendarBoard({ initialDate }: CalendarBoardProps) {
                 <select
                   title={scopeIsBulk ? "Ödeme bilgileri tek ders için güncellenebilir." : ""}
                   disabled={scopeIsBulk}
-                  className="h-10 w-full rounded-xl border border-input px-3 text-sm disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
+                  className="h-10 w-full rounded-xl border border-input px-3 text-base disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 md:text-sm"
                   value={editor.paymentStatus}
                   onChange={(e) => setEditor((prev) => ({ ...prev, paymentStatus: e.target.value as EditorState["paymentStatus"] }))}
                 >
@@ -737,7 +737,7 @@ export function CalendarBoard({ initialDate }: CalendarBoardProps) {
             <div className="space-y-1">
               <Label>No-show ücret kuralı</Label>
               <select
-                className="h-10 w-full rounded-xl border border-input px-3 text-sm"
+                className="h-10 w-full rounded-xl border border-input px-3 text-base md:text-sm"
                 value={editor.noShowFeeRule}
                 onChange={(e) => setEditor((prev) => ({ ...prev, noShowFeeRule: e.target.value as EditorState["noShowFeeRule"] }))}
               >
