@@ -6,12 +6,14 @@ import { Lock, User } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { formatDateTR } from "@/lib/format";
+import { createClient } from "@/lib/supabase/client";
 import { useSettings } from "@/hooks/useSettings";
-import { useProfile } from "@/hooks/useProfile";
 
 const passwordChangeSchema = z
   .object({
@@ -63,7 +65,6 @@ async function parseError(response: Response, fallback: string) {
 
 export default function AyarlarPage() {
   const { data: settings, mutate } = useSettings();
-  const { data: profile } = useProfile();
 
   const [adminEmail, setAdminEmail] = useState("");
   const [overdueDays, setOverdueDays] = useState(7);
@@ -79,7 +80,8 @@ export default function AyarlarPage() {
   >("UCRET_ALINMAZ");
   const [saving, setSaving] = useState(false);
 
-  const [profileEmail, setProfileEmail] = useState("");
+  const [email, setEmail] = useState("");
+  const [emailLoading, setEmailLoading] = useState(true);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [newPasswordRepeat, setNewPasswordRepeat] = useState("");
@@ -103,9 +105,26 @@ export default function AyarlarPage() {
   }, [settings]);
 
   useEffect(() => {
-    if (!profile) return;
-    setProfileEmail(profile.email ?? "");
-  }, [profile]);
+    let isMounted = true;
+
+    async function loadEmail() {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!isMounted) return;
+
+      setEmail(user?.email ?? "");
+      setEmailLoading(false);
+    }
+
+    void loadEmail();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const holidayItems = useMemo(
     () => [...holidays].sort((a, b) => a.localeCompare(b)),
@@ -217,8 +236,19 @@ export default function AyarlarPage() {
           <div className="grid gap-3">
             <div className="space-y-1">
               <Label>E-posta</Label>
-              <Input value={profileEmail} disabled readOnly />
+              {emailLoading ? (
+                <Skeleton className="h-10 w-full rounded-xl" />
+              ) : (
+                <Input value={email} disabled readOnly />
+              )}
             </div>
+            {!emailLoading && !email ? (
+              <Alert variant="destructive">
+                <AlertDescription>
+                  E-posta bilgisi alınamadı. Lütfen tekrar giriş yapın.
+                </AlertDescription>
+              </Alert>
+            ) : null}
           </div>
         </CardContent>
       </Card>
