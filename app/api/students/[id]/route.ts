@@ -68,3 +68,25 @@ export async function PATCH(
 
   return NextResponse.json(student);
 }
+
+export async function DELETE(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const { id } = await params;
+  const { supabase, user } = await requireApiUser();
+  if (!user) return unauthorized();
+
+  const { data: student, error } = await supabase
+    .from("students")
+    .update({ status: "PASIF" })
+    .eq("id", id)
+    .select("id,full_name,status")
+    .single();
+
+  if (error || !student) {
+    return badRequest("Öğrenci silinemedi.", error?.message);
+  }
+
+  return NextResponse.json(student);
+}

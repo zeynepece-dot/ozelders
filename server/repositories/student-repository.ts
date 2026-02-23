@@ -7,6 +7,7 @@ export async function listStudentsWithBalance() {
   const { data: students, error } = await supabase
     .from("students")
     .select("id,full_name,phone,subject,hourly_rate_default,status")
+    .eq("status", "AKTIF")
     .order("created_at", { ascending: false });
 
   if (error) {
