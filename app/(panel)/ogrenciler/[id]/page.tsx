@@ -931,89 +931,95 @@ export default function OgrenciDetayPage() {
       </Dialog>
 
       <Dialog open={lessonDialogOpen} onOpenChange={setLessonDialogOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Tek Ders Randevu Ekle</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-3 md:grid-cols-2">
-            <div className="space-y-1">
-              <Label>Tarih</Label>
-              <Input type="date" value={singleDate} onChange={(e) => setSingleDate(e.target.value)} />
+        <DialogContent className="top-14 max-h-[calc(100dvh-56px)] max-w-lg -translate-y-0 gap-0 p-0 md:top-1/2 md:max-h-[90dvh] md:-translate-y-1/2">
+          <div className="flex min-h-0 max-h-[calc(100dvh-56px)] flex-col md:max-h-[90dvh]">
+            <DialogHeader className="sticky top-0 z-10 border-b bg-white px-4 py-4 pr-12">
+              <DialogTitle>Tek Ders Randevu Ekle</DialogTitle>
+            </DialogHeader>
+
+            <div className="ios-scroll flex-1 overflow-y-auto px-4 py-4">
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="space-y-1">
+                  <Label>Tarih</Label>
+                  <Input type="date" value={singleDate} onChange={(e) => setSingleDate(e.target.value)} />
+                </div>
+                <div className="space-y-1">
+                  <Label>Başlangıç saati</Label>
+                  <Input type="time" value={singleTime} onChange={(e) => setSingleTime(e.target.value)} />
+                </div>
+                <div className="space-y-1">
+                  <Label>Süre (saat)</Label>
+                  <select
+                    className="h-10 w-full rounded-xl border border-input px-3 text-base md:text-sm"
+                    value={singleDuration}
+                    onChange={(e) => setSingleDuration(Number(e.target.value))}
+                  >
+                    {DURATION_OPTIONS.map((value) => (
+                      <option key={value} value={value}>
+                        {value}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <Label>Durum</Label>
+                  <select
+                    className="h-10 w-full rounded-xl border border-input px-3 text-base md:text-sm"
+                    value={singleStatus}
+                    onChange={(e) => setSingleStatus(e.target.value as Lesson["status"])}
+                  >
+                    <option value="PLANLANDI">Planlandı</option>
+                    <option value="YAPILDI">Yapıldı</option>
+                    <option value="GELMEDI">Gelmedi</option>
+                    <option value="IPTAL">İptal</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <Label>Ödeme durumu</Label>
+                  <select
+                    className="h-10 w-full rounded-xl border border-input px-3 text-base md:text-sm"
+                    value={singlePayment}
+                    onChange={(e) =>
+                      setSinglePayment(e.target.value as "ODENDI" | "ODENMEDI" | "KISMI")
+                    }
+                  >
+                    <option value="ODENMEDI">Ödenmedi</option>
+                    <option value="ODENDI">Ödendi</option>
+                    <option value="KISMI">Kısmi</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <Label>Saat ücreti</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min={0}
+                    value={singleHourlyRate}
+                    onChange={(e) => setSingleHourlyRate(Number(e.target.value))}
+                  />
+                </div>
+                <div className="space-y-1 md:col-span-2">
+                  <Label>Not</Label>
+                  <Input value={singleNote} onChange={(e) => setSingleNote(e.target.value)} />
+                </div>
+              </div>
             </div>
-            <div className="space-y-1">
-              <Label>Başlangıç saati</Label>
-              <Input type="time" value={singleTime} onChange={(e) => setSingleTime(e.target.value)} />
+
+            <div className="sticky bottom-0 flex justify-end gap-2 border-t bg-white/90 px-4 py-3 backdrop-blur">
+              <Button variant="outline" onClick={() => setLessonDialogOpen(false)}>
+                İptal
+              </Button>
+              <Button onClick={createSingleLesson} disabled={savingSingle}>
+                {savingSingle ? "Kaydediliyor..." : "Kaydet"}
+              </Button>
             </div>
-            <div className="space-y-1">
-              <Label>Süre (saat)</Label>
-              <select
-                className="h-10 w-full rounded-xl border border-input px-3 text-base md:text-sm"
-                value={singleDuration}
-                onChange={(e) => setSingleDuration(Number(e.target.value))}
-              >
-                {DURATION_OPTIONS.map((value) => (
-                  <option key={value} value={value}>
-                    {value}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-1">
-              <Label>Durum</Label>
-              <select
-                className="h-10 w-full rounded-xl border border-input px-3 text-base md:text-sm"
-                value={singleStatus}
-                onChange={(e) => setSingleStatus(e.target.value as Lesson["status"])}
-              >
-                <option value="PLANLANDI">Planlandı</option>
-                <option value="YAPILDI">Yapıldı</option>
-                <option value="GELMEDI">Gelmedi</option>
-                <option value="IPTAL">İptal</option>
-              </select>
-            </div>
-            <div className="space-y-1">
-              <Label>Ödeme durumu</Label>
-              <select
-                className="h-10 w-full rounded-xl border border-input px-3 text-base md:text-sm"
-                value={singlePayment}
-                onChange={(e) =>
-                  setSinglePayment(e.target.value as "ODENDI" | "ODENMEDI" | "KISMI")
-                }
-              >
-                <option value="ODENMEDI">Ödenmedi</option>
-                <option value="ODENDI">Ödendi</option>
-                <option value="KISMI">Kısmi</option>
-              </select>
-            </div>
-            <div className="space-y-1">
-              <Label>Saat ücreti</Label>
-              <Input
-                type="number"
-                step="0.01"
-                min={0}
-                value={singleHourlyRate}
-                onChange={(e) => setSingleHourlyRate(Number(e.target.value))}
-              />
-            </div>
-            <div className="space-y-1 md:col-span-2">
-              <Label>Not</Label>
-              <Input value={singleNote} onChange={(e) => setSingleNote(e.target.value)} />
-            </div>
-          </div>
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setLessonDialogOpen(false)}>
-              İptal
-            </Button>
-            <Button onClick={createSingleLesson} disabled={savingSingle}>
-              {savingSingle ? "Kaydediliyor..." : "Kaydet"}
-            </Button>
           </div>
         </DialogContent>
       </Dialog>
       <Dialog open={recurrenceDialogOpen} onOpenChange={setRecurrenceDialogOpen}>
-        <DialogContent className="max-w-xl gap-0 p-0">
-          <div className="flex h-[calc(100dvh-56px)] max-h-[calc(100dvh-56px)] flex-col">
-            <DialogHeader className="border-b px-4 py-4 pr-12">
+        <DialogContent className="top-14 max-h-[calc(100dvh-56px)] max-w-xl -translate-y-0 gap-0 p-0 md:top-1/2 md:max-h-[90dvh] md:-translate-y-1/2">
+          <div className="flex min-h-0 max-h-[calc(100dvh-56px)] flex-col md:max-h-[90dvh]">
+            <DialogHeader className="sticky top-0 z-10 border-b bg-white px-4 py-4 pr-12">
               <DialogTitle>Haftalık Tekrarlayan Ders Saati Oluştur</DialogTitle>
             </DialogHeader>
 
@@ -1110,7 +1116,7 @@ export default function OgrenciDetayPage() {
               </div>
             </div>
 
-            <div className="sticky bottom-0 flex justify-end gap-2 border-t bg-white/80 px-4 py-4 backdrop-blur">
+            <div className="sticky bottom-0 flex justify-end gap-2 border-t bg-white/90 px-4 py-3 backdrop-blur">
               <Button variant="outline" onClick={() => setRecurrenceDialogOpen(false)}>
                 İptal
               </Button>
