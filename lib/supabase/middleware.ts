@@ -1,29 +1,9 @@
-﻿import { NextResponse, type NextRequest } from "next/server";
-import { createServerClient } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
+import { hasSupabaseAuthCookie } from "@/lib/supabase/auth-cookie";
 
 export async function updateSession(request: NextRequest) {
-  let response = NextResponse.next({ request });
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-          response = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
-        },
-      },
-    },
-  );
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const response = NextResponse.next({ request });
+  const hasAuthCookie = hasSupabaseAuthCookie(request.cookies.getAll());
 
   const pathname = request.nextUrl.pathname;
   const isPublicRoute =
@@ -35,19 +15,19 @@ export async function updateSession(request: NextRequest) {
     (route) => pathname === route || pathname.startsWith(`${route}/`),
   );
 
-  if (!user && isProtectedRoute) {
+  if (!hasAuthCookie && isProtectedRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/giris";
     return NextResponse.redirect(url);
   }
 
-  if (user && isAuthRoute) {
+  if (hasAuthCookie && isAuthRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/panel";
     return NextResponse.redirect(url);
   }
 
-  if (!user && isPublicRoute) {
+  if (!hasAuthCookie && isPublicRoute) {
     return response;
   }
 

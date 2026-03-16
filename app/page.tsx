@@ -1,13 +1,10 @@
-﻿import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server-readonly";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { hasSupabaseAuthCookie } from "@/lib/supabase/auth-cookie";
 
 export default async function HomePage() {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const hasAuthCookie = hasSupabaseAuthCookie(cookies().getAll());
 
-  if (user) redirect("/panel");
+  if (hasAuthCookie) redirect("/panel");
   redirect("/giris");
 }
-
