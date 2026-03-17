@@ -1,5 +1,5 @@
-﻿import { PageHeader } from "@/components/layout/page-header";
 import { CalendarBoard } from "@/components/calendar/calendar-board";
+import { PageHeader } from "@/components/layout/page-header";
 
 type TakvimPageProps = {
   searchParams?: {
@@ -28,4 +28,3 @@ export default function TakvimPage({ searchParams }: TakvimPageProps) {
     </section>
   );
 }
-

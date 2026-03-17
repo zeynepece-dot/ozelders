@@ -1,4 +1,6 @@
-﻿import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { NextResponse } from "next/server";
+import { hasSupabaseAuthCookie } from "@/lib/supabase/auth-cookie";
 import { createClient } from "@/lib/supabase/server-route";
 
 export function badRequest(message: string, details?: unknown) {
@@ -15,6 +17,11 @@ export function serverError(message: string) {
 
 export async function requireApiUser() {
   const supabase = createClient();
+
+  if (!hasSupabaseAuthCookie(cookies().getAll())) {
+    return { supabase, user: null };
+  }
+
   const {
     data: { user },
     error,
@@ -26,4 +33,3 @@ export async function requireApiUser() {
 
   return { supabase, user };
 }
-

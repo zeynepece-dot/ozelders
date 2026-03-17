@@ -5,11 +5,16 @@ export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
 
-  if (code) {
-    const supabase = createClient();
-    await supabase.auth.exchangeCodeForSession(code);
+  if (!code) {
+    return NextResponse.redirect(new URL("/giris?e=dogrulama_basarisiz", requestUrl.origin));
   }
 
-  const redirectUrl = new URL("/panel", requestUrl.origin);
-  return NextResponse.redirect(redirectUrl);
+  const supabase = createClient();
+  const { error } = await supabase.auth.exchangeCodeForSession(code);
+
+  if (error) {
+    return NextResponse.redirect(new URL("/giris?e=dogrulama_basarisiz", requestUrl.origin));
+  }
+
+  return NextResponse.redirect(new URL("/panel", requestUrl.origin));
 }

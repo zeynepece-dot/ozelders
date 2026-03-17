@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDateTR } from "@/lib/format";
-import { createClient } from "@/lib/supabase/client";
+import { useProfile } from "@/hooks/useProfile";
 import { useSettings } from "@/hooks/useSettings";
 
 const passwordChangeSchema = z
@@ -65,6 +65,7 @@ async function parseError(response: Response, fallback: string) {
 
 export default function AyarlarPage() {
   const { data: settings, mutate } = useSettings();
+  const { data: profile, isLoading: profileLoading } = useProfile();
 
   const [adminEmail, setAdminEmail] = useState("");
   const [overdueDays, setOverdueDays] = useState(7);
@@ -81,7 +82,6 @@ export default function AyarlarPage() {
   const [saving, setSaving] = useState(false);
 
   const [email, setEmail] = useState("");
-  const [emailLoading, setEmailLoading] = useState(true);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [newPasswordRepeat, setNewPasswordRepeat] = useState("");
@@ -105,26 +105,8 @@ export default function AyarlarPage() {
   }, [settings]);
 
   useEffect(() => {
-    let isMounted = true;
-
-    async function loadEmail() {
-      const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!isMounted) return;
-
-      setEmail(user?.email ?? "");
-      setEmailLoading(false);
-    }
-
-    void loadEmail();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+    setEmail(profile?.email ?? "");
+  }, [profile?.email]);
 
   const holidayItems = useMemo(
     () => [...holidays].sort((a, b) => a.localeCompare(b)),
@@ -236,13 +218,13 @@ export default function AyarlarPage() {
           <div className="grid gap-3">
             <div className="space-y-1">
               <Label>E-posta</Label>
-              {emailLoading ? (
+              {profileLoading ? (
                 <Skeleton className="h-10 w-full rounded-xl" />
               ) : (
                 <Input value={email} disabled readOnly />
               )}
             </div>
-            {!emailLoading && !email ? (
+            {!profileLoading && !email ? (
               <Alert variant="destructive">
                 <AlertDescription>
                   E-posta bilgisi alınamadı. Lütfen tekrar giriş yapın.

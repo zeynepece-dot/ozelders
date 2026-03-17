@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
@@ -15,12 +15,12 @@ import { Label } from "@/components/ui/label";
 
 const resetPasswordSchema = z
   .object({
-    password: z.string().min(8, "Åifre en az 8 karakter olmalÄ±dÄ±r."),
-    passwordConfirm: z.string().min(8, "Åifre en az 8 karakter olmalÄ±dÄ±r."),
+    password: z.string().min(8, "Şifre en az 8 karakter olmalıdır."),
+    passwordConfirm: z.string().min(8, "Şifre en az 8 karakter olmalıdır."),
   })
   .refine((value) => value.password === value.passwordConfirm, {
     path: ["passwordConfirm"],
-    message: "Åifreler aynÄ± deÄŸil.",
+    message: "Şifreler aynı değil.",
   });
 
 type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
@@ -49,7 +49,7 @@ export default function ResetPasswordPage() {
       return;
     }
 
-    toast.success("Åifren gÃ¼ncellendi. GiriÅŸ yapabilirsin.");
+    toast.success("Şifren güncellendi. Giriş yapabilirsin.");
     router.push("/giris");
     router.refresh();
   }
@@ -58,12 +58,12 @@ export default function ResetPasswordPage() {
     <div className="flex min-h-[100dvh] items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Yeni Åifre Belirle</CardTitle>
+          <CardTitle>Yeni Şifre Belirle</CardTitle>
         </CardHeader>
         <CardContent>
           <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
             <div className="space-y-2">
-              <Label htmlFor="password">Yeni ÅŸifre</Label>
+              <Label htmlFor="password">Yeni şifre</Label>
               <Input id="password" type="password" {...form.register("password")} />
               {form.formState.errors.password ? (
                 <p className="text-xs text-red-600">{form.formState.errors.password.message}</p>
@@ -71,7 +71,7 @@ export default function ResetPasswordPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password-confirm">Yeni ÅŸifre (tekrar)</Label>
+              <Label htmlFor="password-confirm">Yeni şifre (tekrar)</Label>
               <Input
                 id="password-confirm"
                 type="password"
@@ -88,10 +88,10 @@ export default function ResetPasswordPage() {
               {form.formState.isSubmitting ? (
                 <span className="inline-flex items-center gap-2">
                   <LoadingSpinner />
-                  GÃ¼ncelleniyor...
+                  Güncelleniyor...
                 </span>
               ) : (
-                "Åifreyi GÃ¼ncelle"
+                "Şifreyi Güncelle"
               )}
             </Button>
           </form>
@@ -100,4 +100,3 @@ export default function ResetPasswordPage() {
     </div>
   );
 }
-
