@@ -1,4 +1,4 @@
-﻿# Özel Ders Yönetim Paneli
+# Özel Ders Yönetim Paneli
 
 Next.js 14 (App Router) + TypeScript + Tailwind + shadcn/ui + Supabase (Postgres + Auth) ile hazırlanmış, tek öğretmen kullanımına uygun yönetim paneli.
 

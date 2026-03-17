@@ -1,4 +1,4 @@
-﻿export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic";
 
 import { requireApiUser, unauthorized } from "@/server/api";
 import { createClient } from "@/lib/supabase/server-route";

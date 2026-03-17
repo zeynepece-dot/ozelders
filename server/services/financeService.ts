@@ -1,4 +1,4 @@
-﻿import { createClient } from "@/lib/supabase/server-readonly";
+import { createClient } from "@/lib/supabase/server-readonly";
 
 export type LessonStatus = "PLANLANDI" | "YAPILDI" | "GELMEDI" | "IPTAL";
 export type NoShowFeeRule = "UCRET_ALINMAZ" | "YARIM_UCRET" | "TAM_UCRET";

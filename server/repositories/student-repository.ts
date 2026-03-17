@@ -1,4 +1,4 @@
-﻿import { createClient } from "@/lib/supabase/server-readonly";
+import { createClient } from "@/lib/supabase/server-readonly";
 import { computeStudentBalance } from "@/server/services/financeService";
 
 export async function listStudentsWithBalance() {

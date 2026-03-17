@@ -1,4 +1,4 @@
-﻿export function computeMonthlyStats(rows: Array<Record<string, unknown>>) {
+export function computeMonthlyStats(rows: Array<Record<string, unknown>>) {
   const totalLessonHours = rows.reduce((sum, row) => sum + Number(row.duration_hours ?? 0), 0);
   const collected = rows.reduce((sum, row) => sum + Number(row.amount_paid ?? 0), 0);
   const receivable = rows.reduce(

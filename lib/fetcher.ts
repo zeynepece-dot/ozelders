@@ -1,4 +1,4 @@
-﻿export async function fetcher<T>(input: RequestInfo | URL, init?: RequestInit): Promise<T> {
+export async function fetcher<T>(input: RequestInfo | URL, init?: RequestInit): Promise<T> {
   const response = await fetch(input, init);
 
   if (!response.ok) {

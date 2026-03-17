@@ -1,4 +1,4 @@
-﻿import { NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { profileUpsertSchema } from "@/lib/validations";
 import { requireApiUser, unauthorized } from "@/server/api";
 

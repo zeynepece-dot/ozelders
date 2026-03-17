@@ -1,4 +1,4 @@
-﻿import { format } from "date-fns";
+import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 
 export function formatCurrencyTRY(value: number) {

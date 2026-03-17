@@ -1,4 +1,4 @@
-﻿import { createClient } from "@/lib/supabase/server-readonly";
+import { createClient } from "@/lib/supabase/server-readonly";
 import { computeMonthlyStats } from "@/server/services/reportService";
 
 export async function getMonthlyReport(range?: { from?: string; to?: string }) {

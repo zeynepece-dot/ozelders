@@ -1,4 +1,4 @@
-﻿import { Clock3, TrendingUp, WalletCards } from "lucide-react";
+import { Clock3, TrendingUp, WalletCards } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatCurrencyTRY } from "@/lib/format";
 

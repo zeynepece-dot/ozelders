@@ -1,4 +1,4 @@
-﻿export const APP_NAME = "Özel Ders Yönetim Paneli";
+export const APP_NAME = "Özel Ders Yönetim Paneli";
 
 export const SIDEBAR_ITEMS = [
   { href: "/panel", label: "Panel" },
